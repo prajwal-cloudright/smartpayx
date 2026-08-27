@@ -1,0 +1,31 @@
+{% comment %}
+  SmartPayX order confirmation — APP BLOCK (section target). The merchant
+  creates a page with handle `spx-thank-you` and places this block on it.
+  The widget redirects buyers to /pages/spx-thank-you?o={app_order_id}.
+{% endcomment %}
+
+<div id="spx-thankyou-root"></div>
+
+<script type="application/json" id="spx-thankyou-settings">
+  {
+    "accent": {{ block.settings.accent_color | json }},
+    "accent_ink": {{ block.settings.accent_text_color | json }},
+    "bg": {{ block.settings.background_color | json }},
+    "ink": {{ block.settings.text_color | json }}
+  }
+</script>
+
+<script src="{{ 'thankyou.js' | asset_url }}" type="module" defer></script>
+
+{% schema %}
+{
+  "name": "SmartPayX Thank You",
+  "target": "section",
+  "settings": [
+    { "type": "color", "id": "accent_color", "label": "Accent color", "default": "#0E7A5F" },
+    { "type": "color", "id": "accent_text_color", "label": "Text on accent", "default": "#FFFFFF" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#FFFFFF" },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#16181D" }
+  ]
+}
+{% endschema %}

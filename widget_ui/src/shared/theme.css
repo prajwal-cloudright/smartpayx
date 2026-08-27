@@ -1,0 +1,896 @@
+/* ============================================================================
+   SmartPayX design system
+   Injected into the shadow root via ?inline — never lands in document <head>.
+
+   Layout-critical properties on :host are set INLINE from mount.js with
+   !important, because theme rules like `div:empty { display: none }` reach the
+   host element (shadow children don't satisfy :empty). Only tokens and
+   inherited properties belong in this :host block.
+   ========================================================================== */
+
+:host {
+  /* ---- palette (merchant-overridable) ---- */
+  --spx-accent: #1c1c22;
+  --spx-accent-ink: #ffffff;
+  --spx-bg: #ffffff;
+  --spx-ink: #0f1115;
+
+  /* ---- derived neutrals ---- */
+  --spx-ink-2: #6b7280;
+  --spx-ink-3: #9aa1ab;
+  --spx-surface: #fafafa;
+  --spx-surface-2: #f4f4f5;
+  --spx-line: #ebecef;
+  --spx-line-2: #dfe1e5;
+  --spx-success: #067a4e;
+  --spx-success-bg: #e9f7f0;
+  --spx-danger: #b42318;
+  --spx-danger-bg: #fef3f2;
+  --spx-warn: #b54708;
+  --spx-warn-bg: #fffaeb;
+
+  /* ---- shape + depth ---- */
+  --spx-r-sm: 8px;
+  --spx-r: 12px;
+  --spx-r-lg: 16px;
+  --spx-r-xl: 24px;
+  --spx-shadow-sm:
+    0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --spx-shadow-lg:
+    0 -8px 40px rgba(16, 24, 40, 0.16), 0 0 1px rgba(16, 24, 40, 0.3);
+  --spx-ring: 0 0 0 3px color-mix(in srgb, var(--spx-accent) 14%, transparent);
+
+  /* ---- type ---- */
+  --spx-font:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  font-family: var(--spx-font);
+  font-size: 15px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.5;
+  letter-spacing: -0.006em;
+  text-transform: none;
+  text-align: left;
+  color: var(--spx-ink);
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+img {
+  max-width: 100%;
+  display: block;
+}
+:focus-visible {
+  outline: 2px solid var(--spx-accent);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Overlay + sheet
+   ========================================================================== */
+.spx-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 13, 18, 0.6);
+  backdrop-filter: saturate(120%) blur(3px);
+  -webkit-backdrop-filter: saturate(120%) blur(3px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: spx-fade 200ms ease-out;
+}
+
+/* MOBILE FIRST: full-screen, no rounding, uses dynamic viewport height so the
+   browser chrome collapsing doesn't clip the footer. */
+.spx-sheet {
+  position: relative; /* containing block for the nested exit sheet */
+  overflow: hidden; /* keeps the exit sheet's corners inside */
+  background: var(--spx-bg);
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  animation: spx-slide 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (min-width: 640px) {
+  .spx-overlay {
+    align-items: center;
+    padding: 32px 20px;
+  }
+  .spx-sheet {
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+    max-height: min(760px, 88vh);
+    border-radius: var(--spx-r-xl);
+    box-shadow: var(--spx-shadow-lg);
+    animation: spx-pop 260ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+@media (min-width: 1024px) {
+  .spx-sheet {
+    max-width: 520px;
+  }
+}
+
+@keyframes spx-slide {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes spx-pop {
+  from {
+    transform: translateY(12px) scale(0.985);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes spx-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes spx-rise {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   Chrome: header / body / footer
+   ========================================================================== */
+.spx-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--spx-line);
+  background: var(--spx-bg);
+}
+.spx-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--spx-ink-2);
+  background: var(--spx-surface-2);
+  transition:
+    background 140ms,
+    color 140ms;
+}
+.spx-close:hover {
+  background: var(--spx-line-2);
+  color: var(--spx-ink);
+}
+
+.spx-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+  -webkit-overflow-scrolling: touch;
+  /* Screens render their own sticky action bar as the last child, so the body
+     is a column with the content growing and the bar pinned to the bottom. */
+  display: flex;
+  flex-direction: column;
+}
+.spx-body::-webkit-scrollbar {
+  width: 10px;
+}
+.spx-body::-webkit-scrollbar-thumb {
+  background: var(--spx-line-2);
+  border-radius: 99px;
+  border: 3px solid var(--spx-bg);
+}
+
+/* Content region above the sticky bar. */
+.spx-screen {
+  flex: 1 0 auto;
+}
+
+/* Sticky CTA — pinned to the bottom of the scroll area, full-bleed to the
+   sheet edges (negative margins cancel .spx-body padding). */
+.spx-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2; /* above scrolling content */
+  margin: 18px -18px -18px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--spx-line);
+  background: var(--spx-bg); /* opaque — content must not show through */
+  display: grid;
+  gap: 10px;
+}
+
+/* Soft fade so content dissolves into the bar rather than cutting abruptly. */
+.spx-actions::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -24px;
+  height: 24px;
+  background: linear-gradient(to bottom, transparent, var(--spx-bg));
+  pointer-events: none;
+}
+
+.spx-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--spx-line);
+  background: var(--spx-surface);
+  color: var(--spx-ink-3);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* ============================================================================
+   Type
+   ========================================================================== */
+.spx-title {
+  font-size: 19px;
+  font-weight: 640;
+  letter-spacing: -0.022em;
+  line-height: 1.25;
+}
+.spx-title-sm {
+  font-size: 15px;
+  font-weight: 620;
+  letter-spacing: -0.014em;
+}
+.spx-sub {
+  color: var(--spx-ink-2);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.spx-eyebrow {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--spx-ink-3);
+}
+.spx-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 560;
+  color: var(--spx-ink-2);
+  margin-bottom: 7px;
+}
+.spx-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+   Inputs
+   ========================================================================== */
+.spx-input {
+  width: 100%;
+  height: 50px;
+  padding: 0 15px;
+  background: var(--spx-bg);
+  border: 1.5px solid var(--spx-line-2);
+  border-radius: var(--spx-r);
+  outline: none;
+  transition:
+    border-color 140ms,
+    box-shadow 140ms;
+  font-size: 15px;
+}
+.spx-input::placeholder {
+  color: var(--spx-ink-3);
+}
+.spx-input:hover:not([disabled]) {
+  border-color: var(--spx-ink-3);
+}
+.spx-input:focus {
+  border-color: var(--spx-accent);
+  box-shadow: var(--spx-ring);
+}
+.spx-input[disabled] {
+  background: var(--spx-surface-2);
+  color: var(--spx-ink-2);
+  cursor: not-allowed;
+}
+.spx-input.spx-invalid {
+  border-color: var(--spx-danger);
+}
+.spx-input.spx-invalid:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--spx-danger) 13%, transparent);
+}
+
+.spx-field {
+  margin-bottom: 14px;
+}
+.spx-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+}
+.spx-err {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--spx-danger);
+  font-size: 12.5px;
+  margin-top: 6px;
+}
+.spx-hint {
+  color: var(--spx-ink-3);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.spx-prefix-wrap {
+  position: relative;
+}
+.spx-prefix {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--spx-ink-2);
+  font-weight: 550;
+  pointer-events: none;
+  padding-right: 11px;
+  border-right: 1px solid var(--spx-line-2);
+}
+.spx-prefix + .spx-input {
+  padding-left: 62px;
+}
+
+.spx-input-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+}
+
+/* OTP */
+.spx-otp {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 9px;
+}
+.spx-otp input {
+  width: 100%;
+  height: 56px;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+  background: var(--spx-surface);
+  border: 1.5px solid var(--spx-line-2);
+  border-radius: var(--spx-r);
+  outline: none;
+  transition:
+    border-color 140ms,
+    box-shadow 140ms,
+    background 140ms;
+}
+.spx-otp input:focus {
+  background: var(--spx-bg);
+  border-color: var(--spx-accent);
+  box-shadow: var(--spx-ring);
+}
+.spx-otp.spx-invalid input {
+  border-color: var(--spx-danger);
+}
+
+/* ============================================================================
+   Buttons
+   ========================================================================== */
+.spx-btn {
+  position: relative;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 18px;
+  border-radius: var(--spx-r);
+  font-size: 15.5px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transition:
+    transform 100ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 140ms,
+    background 140ms;
+}
+.spx-btn:active:not([disabled]) {
+  transform: scale(0.982);
+}
+.spx-btn-primary {
+  background: var(--spx-accent);
+  color: var(--spx-accent-ink);
+  box-shadow: var(--spx-shadow-sm);
+}
+.spx-btn-primary:hover:not([disabled]) {
+  filter: brightness(1.12);
+}
+.spx-btn-primary[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.spx-btn-secondary {
+  background: var(--spx-bg);
+  color: var(--spx-ink);
+  border: 1.5px solid var(--spx-line-2);
+}
+.spx-btn-secondary:hover:not([disabled]) {
+  background: var(--spx-surface);
+  border-color: var(--spx-ink-3);
+}
+.spx-btn-ghost {
+  background: var(--spx-surface-2);
+  color: var(--spx-ink);
+}
+.spx-btn-ghost:hover:not([disabled]) {
+  background: var(--spx-line);
+}
+.spx-btn-danger {
+  background: var(--spx-danger);
+  color: #fff;
+}
+.spx-btn-sm {
+  min-height: 42px;
+  font-size: 14px;
+  border-radius: var(--spx-r-sm);
+}
+
+.spx-link {
+  color: var(--spx-accent);
+  font-weight: 580;
+  font-size: 13.5px;
+  text-underline-offset: 3px;
+  transition: opacity 140ms;
+}
+.spx-link:hover:not([disabled]) {
+  text-decoration: underline;
+}
+.spx-link[disabled] {
+  color: var(--spx-ink-3);
+  cursor: default;
+}
+
+.spx-btn-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.spx-btn-amount b {
+  font-size: 16.5px;
+  font-weight: 680;
+}
+
+/* ============================================================================
+   Cards & selectable rows
+   ========================================================================== */
+.spx-card {
+  background: var(--spx-bg);
+  border: 1px solid var(--spx-line);
+  border-radius: var(--spx-r-lg);
+  overflow: hidden;
+}
+.spx-card-pad {
+  padding: 15px 16px;
+}
+.spx-card-muted {
+  background: var(--spx-surface);
+  border-color: transparent;
+}
+
+.spx-option {
+  position: relative;
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  padding: 15px 16px;
+  background: var(--spx-bg);
+  border: 1.5px solid var(--spx-line);
+  border-radius: var(--spx-r-lg);
+  transition:
+    border-color 160ms,
+    background 160ms,
+    box-shadow 160ms;
+}
+.spx-option:hover:not(.spx-on) {
+  border-color: var(--spx-ink-3);
+}
+.spx-option.spx-on {
+  border-color: var(--spx-accent);
+  background: color-mix(in srgb, var(--spx-accent) 3%, var(--spx-bg));
+  box-shadow: var(--spx-ring);
+}
+.spx-option + .spx-option {
+  margin-top: 10px;
+}
+
+.spx-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border: 2px solid var(--spx-line-2);
+  display: grid;
+  place-items: center;
+  transition: border-color 160ms;
+}
+.spx-on .spx-radio {
+  border-color: var(--spx-accent);
+}
+.spx-on .spx-radio::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--spx-accent);
+  animation: spx-pop-dot 180ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes spx-pop-dot {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.spx-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 620;
+  letter-spacing: 0.005em;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: var(--spx-success-bg);
+  color: var(--spx-success);
+}
+.spx-badge-neutral {
+  background: var(--spx-surface-2);
+  color: var(--spx-ink-2);
+}
+.spx-badge-warn {
+  background: var(--spx-warn-bg);
+  color: var(--spx-warn);
+}
+
+/* ============================================================================
+   Cart summary
+   ========================================================================== */
+.spx-summary-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  text-align: left;
+  transition: background 140ms;
+}
+.spx-summary-head:hover {
+  background: var(--spx-surface);
+}
+.spx-chevron {
+  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.spx-chevron.spx-open {
+  transform: rotate(180deg);
+}
+
+.spx-line-item {
+  display: flex;
+  gap: 13px;
+  padding: 13px 0;
+  align-items: center;
+}
+.spx-line-item + .spx-line-item {
+  border-top: 1px solid var(--spx-line);
+}
+.spx-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.spx-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--spx-r-sm);
+  object-fit: cover;
+  background: var(--spx-surface-2);
+  border: 1px solid var(--spx-line);
+}
+.spx-qty-dot {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: var(--spx-accent);
+  color: var(--spx-accent-ink);
+  font-size: 11px;
+  font-weight: 650;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--spx-bg);
+}
+.spx-item-title {
+  font-size: 13.5px;
+  font-weight: 560;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.spx-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 13.5px;
+  color: var(--spx-ink-2);
+}
+.spx-price-row b {
+  color: var(--spx-ink);
+  font-weight: 560;
+}
+.spx-price-row.spx-total {
+  margin-top: 8px;
+  padding-top: 13px;
+  border-top: 1px solid var(--spx-line);
+  font-size: 16px;
+  font-weight: 680;
+  color: var(--spx-ink);
+  letter-spacing: -0.018em;
+}
+.spx-save-note {
+  color: var(--spx-success);
+  font-weight: 560;
+}
+
+/* ============================================================================
+   Feedback: skeleton, spinner, notices
+   ========================================================================== */
+.spx-skel {
+  background: linear-gradient(
+    100deg,
+    var(--spx-surface-2) 30%,
+    #eceef1 50%,
+    var(--spx-surface-2) 70%
+  );
+  background-size: 220% 100%;
+  animation: spx-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--spx-r-sm);
+}
+@keyframes spx-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+
+.spx-spin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  animation: spx-rot 640ms linear infinite;
+}
+.spx-spin-lg {
+  width: 38px;
+  height: 38px;
+  border-width: 3px;
+  color: var(--spx-accent);
+}
+@keyframes spx-rot {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spx-notice {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  border-radius: var(--spx-r);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+.spx-notice-warn {
+  background: var(--spx-warn-bg);
+  color: var(--spx-warn);
+}
+.spx-notice-err {
+  background: var(--spx-danger-bg);
+  color: var(--spx-danger);
+}
+.spx-notice-info {
+  background: var(--spx-surface-2);
+  color: var(--spx-ink-2);
+}
+
+/* ============================================================================
+   Status screens
+   ========================================================================== */
+.spx-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 44px 16px;
+}
+.spx-status-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  animation: spx-pop-in 340ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.spx-status-ok {
+  background: var(--spx-success-bg);
+  color: var(--spx-success);
+}
+.spx-status-bad {
+  background: var(--spx-danger-bg);
+  color: var(--spx-danger);
+}
+.spx-status-wait {
+  background: var(--spx-surface-2);
+  color: var(--spx-ink-2);
+}
+@keyframes spx-pop-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.spx-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+.spx-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--spx-ink-3);
+  animation: spx-bounce 1.2s infinite;
+}
+.spx-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.spx-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes spx-bounce {
+  0%,
+  60%,
+  100% {
+    transform: none;
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   Exit confirmation — nested INSIDE .spx-sheet (its positioned ancestor), so
+   it can never span the viewport.
+   ========================================================================== */
+.spx-exit-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: rgba(10, 13, 18, 0.45);
+  display: flex;
+  align-items: flex-end;
+  animation: spx-fade 160ms ease-out;
+}
+.spx-exit-sheet {
+  width: 100%;
+  background: var(--spx-bg);
+  border-radius: var(--spx-r-xl) var(--spx-r-xl) 0 0;
+  padding: 24px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -10px 40px rgba(16, 24, 40, 0.18);
+  animation: spx-rise 260ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.spx-grabber {
+  width: 38px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--spx-line-2);
+  margin: -8px auto 16px;
+}
+.spx-exit-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+  margin-top: 20px;
+}
+
+/* Secure strip */
+.spx-secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--spx-ink-3);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

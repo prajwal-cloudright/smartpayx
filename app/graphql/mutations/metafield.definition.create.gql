@@ -1,0 +1,14 @@
+mutation SpxCreateMetafieldDefinition($definition: MetafieldDefinitionInput!) {
+  metafieldDefinitionCreate(definition: $definition) {
+    createdDefinition {
+      id
+      key
+      namespace
+    }
+    userErrors {
+      field
+      message
+      code
+    }
+  }
+}

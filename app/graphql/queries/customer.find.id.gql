@@ -1,0 +1,7 @@
+query SpxCustomer($id: ID!) {
+  customer(id: $id) {
+    id
+    email
+    phone
+  }
+}

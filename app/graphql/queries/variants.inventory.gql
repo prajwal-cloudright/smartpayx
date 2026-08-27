@@ -1,0 +1,14 @@
+query SpxVariantInventory($ids: [ID!]!) {
+  nodes(ids: $ids) {
+    ... on ProductVariant {
+      id
+      title
+      availableForSale
+      inventoryQuantity
+      inventoryPolicy
+      product {
+        title
+      }
+    }
+  }
+}

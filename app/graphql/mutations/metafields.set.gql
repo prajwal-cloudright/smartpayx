@@ -1,0 +1,13 @@
+mutation SpxSetMetafields($metafields: [MetafieldsSetInput!]!) {
+  metafieldsSet(metafields: $metafields) {
+    metafields {
+      key
+      namespace
+      value
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}

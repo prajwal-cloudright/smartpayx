@@ -1,0 +1,16 @@
+query SpxFindOrderByRequest($identifier: OrderIdentifierInput!) {
+  orderByIdentifier(identifier: $identifier) {
+    id
+    name
+    statusPageUrl
+    customer {
+      id
+    }
+    totalPriceSet {
+      shopMoney {
+        amount
+        currencyCode
+      }
+    }
+  }
+}
