@@ -24,6 +24,7 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json* ./
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/prisma ./prisma
 
 RUN npm ci --omit=dev && npm cache clean --force
 
