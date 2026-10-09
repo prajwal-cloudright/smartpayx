@@ -21,7 +21,6 @@ build-and-push:
 name: Build and Push Docker Image
 runs-on: ubuntu-latest
 
-
 outputs:
   image_uri: ${{ steps.image.outputs.image_uri }}
 
@@ -136,7 +135,6 @@ runs-on: ubuntu-latest
 needs:
 - build-and-push
 - deploy-ec2
-
 
 steps:
   - name: Checkout repository
