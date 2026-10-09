@@ -1,0 +1,46 @@
+query SpxCart($cartId: ID!) {
+  cart(id: $cartId) {
+    id
+    totalQuantity
+    cost {
+      subtotalAmount {
+        amount
+        currencyCode
+      }
+      totalAmount {
+        amount
+        currencyCode
+      }
+    }
+    lines(first: 100) {
+      nodes {
+        id
+        quantity
+        merchandise {
+          ... on ProductVariant {
+            id
+            title
+            sku
+            price {
+              amount
+              currencyCode
+            }
+            image {
+              url
+              altText
+            }
+            product {
+              id
+              title
+              handle
+            }
+          }
+        }
+      }
+    }
+    discountCodes {
+      code
+      applicable
+    }
+  }
+}

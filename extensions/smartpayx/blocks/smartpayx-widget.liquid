@@ -1,0 +1,41 @@
+{% comment %}
+  SmartPayX checkout — APP EMBED block (target: body). Loads on every page.
+  Settings JSON is dropped for the loader; the metafield smartpayx.enabled is
+  the sole enablement signal (synced by the app's settings save).
+{% endcomment %}
+
+{%- assign spx_enabled = shop.metafields.smartpayx.enabled.value | default: false -%}
+
+<script type="application/json" id="spx-embed-settings">
+  {
+    "enabled": {{ spx_enabled | json }},
+    "accent": {{ block.settings.accent_color | json }},
+    "accent_ink": {{ block.settings.accent_text_color | json }},
+    "bg": {{ block.settings.background_color | json }},
+    "ink": {{ block.settings.text_color | json }},
+    "custom_selector": {{ block.settings.custom_selector | json }}
+  }
+</script>
+
+<script src="{{ 'widget.js' | asset_url }}" type="module" defer></script>
+
+{% schema %}
+{
+  "name": "SmartPayX Checkout",
+  "target": "body",
+  "settings": [
+    { "type": "header", "content": "Appearance" },
+    { "type": "color", "id": "accent_color", "label": "Accent color", "default": "#0E7A5F" },
+    { "type": "color", "id": "accent_text_color", "label": "Text on accent", "default": "#FFFFFF" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#FFFFFF" },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#16181D" },
+    { "type": "header", "content": "Advanced" },
+    {
+      "type": "text",
+      "id": "custom_selector",
+      "label": "Extra checkout button selector",
+      "info": "CSS selector for a theme-specific checkout button the widget should intercept. Leave blank unless the default detection misses your theme's button."
+    }
+  ]
+}
+{% endschema %}

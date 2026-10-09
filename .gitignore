@@ -1,0 +1,59 @@
+# Dependencies
+
+node_modules/
+
+# Environment variables and secrets
+
+.env
+.env.*
+!.env.example
+
+# Local editor and AI tool configuration
+
+.cursor/
+.gemini/
+.mcp.json
+
+# macOS
+
+.DS_Store
+
+# Build and cache files
+
+/.cache/
+/build/
+/app/build/
+/public/build/
+/public/_dev/
+/app/public/build/
+/extensions/*/dist/
+
+# Local database files
+
+/prisma/dev.sqlite
+/prisma/dev.sqlite-journal
+database.sqlite
+
+# Shopify local development files
+
+.shopify/*
+.shopify.lock
+
+# React Router generated files
+
+.react-router/
+
+# Logs
+
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Coverage reports
+
+coverage/
+
+# Temporary files
+
+*.tmp
+*.temp
