@@ -1,275 +1,34 @@
-// SmartPayX — Prisma schema (Postgres)
-// NOTE: two correctness-critical PARTIAL unique indexes exist only in SQL
-// (prisma cannot express them): one_open_request_per_cart, one_live_attempt_per_request.
-// Always use `prisma migrate deploy`. If `migrate dev` ever proposes dropping them, refuse.
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
 }
 
-// ---------------------------------------------------------------------------
-// Shopify session storage (template model — do not rename; PrismaSessionStorage
-// depends on this exact shape)
-// ---------------------------------------------------------------------------
 model Session {
-  id                  String    @id
-  shop                String
-  state               String
-  isOnline            Boolean   @default(false)
-  scope               String?
-  expires             DateTime?
-  accessToken         String
-  userId              BigInt?
-  firstName           String?
-  lastName            String?
-  email               String?
-  accountOwner        Boolean   @default(false)
-  locale              String?
-  collaborator        Boolean?  @default(false)
-  emailVerified       Boolean?  @default(false)
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
-}
-
-// ---------------------------------------------------------------------------
-// SmartPayX domain
-// ---------------------------------------------------------------------------
-enum RequestStatus {
-  OPEN
-  ADDRESS_SET
-  AWAITING_PAYMENT
-  ATTEMPT_INITIATED
-  CAPTURED
-  RECONCILING
-  ORDER_CREATED
-  CANCELLED
-  FAILED_TERMINAL
-  EXPIRED
-
-  @@map("request_status")
-}
-
-enum AttemptStatus {
-  INITIATED
-  CAPTURED
-  FAILED
-  ABANDONED
-  CANCELLED
-
-  @@map("attempt_status")
-}
-
-enum PgProvider {
-  RAZORPAY
-  PINELABS
-
-  @@map("pg_provider")
-}
-
-model Shop {
-  id              BigInt   @id @default(autoincrement())
-  shopDomain      String   @unique @map("shop_domain")
-  // Admin API auth is NOT stored here — the template Session table owns it.
-  storefrontToken String?  @map("storefront_token")
-  spxEnabled      Boolean  @default(false) @map("spx_enabled")
-  settings        Json     @default("{}")
-  pgConfigs       Json     @default("[]") @map("pg_configs")
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  customers     Customer[]
-  otpChallenges OtpChallenge[]
-  requests      CheckoutRequest[]
-  pgCredentials PgCredential[]
-
-  @@map("shops")
-}
-
-model PgCredential {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  shopId     BigInt     @map("shop_id")
-  pg         PgProvider
-  // AES-256-GCM sealed JSON (key id/secret/webhook secret). See utils/crypto.server.ts.
-  encPayload String     @map("enc_payload")
-  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  shop Shop @relation(fields: [shopId], references: [id])
-
-  @@unique([shopId, pg])
-  @@map("pg_credentials")
-}
-
-model Customer {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  shopId            BigInt    @map("shop_id")
-  phone             String // E.164, e.g. +919812345678
-  email             String?
-  emailLocked       Boolean   @default(false) @map("email_locked")
-  shopifyCustomerId String?   @map("shopify_customer_id")
-  lastVerifiedAt    DateTime? @map("last_verified_at") @db.Timestamptz(6)
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  shop      Shop              @relation(fields: [shopId], references: [id])
-  sessions  AuthSession[]
-  addresses CustomerAddress[]
-  requests  CheckoutRequest[]
-
-  @@unique([shopId, phone])
-  @@map("customers")
-}
-
-model OtpChallenge {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  shopId      BigInt    @map("shop_id")
-  phone       String
-  codeHash    String    @map("code_hash")
-  attempts    Int       @default(0) // verify attempts — persists across resends
-  resendCount Int       @default(0) @map("resend_count")
-  lastSentAt  DateTime  @default(now()) @map("last_sent_at") @db.Timestamptz(6)
-  expiresAt   DateTime  @map("expires_at") @db.Timestamptz(6)
-  verifiedAt  DateTime? @map("verified_at") @db.Timestamptz(6)
-  lockedAt    DateTime? @map("locked_at") @db.Timestamptz(6)
-  createdIp   String?   @map("created_ip") @db.Inet
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  shop Shop @relation(fields: [shopId], references: [id])
-
-  @@index([shopId, phone, createdAt(sort: Desc)], map: "otp_phone_recent")
-  @@map("otp_challenges")
-}
-
-model AuthSession {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  customerId String    @map("customer_id") @db.Uuid
-  tokenHash  String    @unique @map("token_hash") // sha256(pepper + raw); raw never stored
-  issuedAt   DateTime  @default(now()) @map("issued_at") @db.Timestamptz(6)
-  lastSeenAt DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(6)
-  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6) // sliding 30d, hard cap issued_at + 90d
-  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
-  uaHash     String?   @map("ua_hash")
-
-  customer Customer @relation(fields: [customerId], references: [id])
-
-  @@index([customerId], map: "sessions_by_customer")
-  @@map("auth_sessions")
-}
-
-model CustomerAddress {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  customerId String    @map("customer_id") @db.Uuid
-  name       String
-  phone      String
-  address1   String
-  address2   String?
-  landmark   String?
-  city       String
-  state      String
-  pincode    String
-  country    String    @default("IN")
-  isDefault  Boolean   @default(false) @map("is_default")
-  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6) // soft delete; requests keep snapshots
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  customer Customer @relation(fields: [customerId], references: [id])
-
-  @@index([customerId], map: "addresses_by_customer")
-  @@map("customer_addresses")
-}
-
-model CheckoutRequest {
-  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  shopId            BigInt        @map("shop_id")
-  cartToken         String        @map("cart_token") // full token verbatim incl. ?key= suffix
-  itemsHash         String?       @map("items_hash")
-  cartSnapshot      Json?         @map("cart_snapshot")
-  customerId        String?       @map("customer_id") @db.Uuid
-  shippingAddress   Json?         @map("shipping_address") // IMMUTABLE snapshot, deliberately not an FK
-  shippingAddressId String?       @map("shipping_address_id") @db.Uuid // provenance only
-  amountMinor       BigInt?       @map("amount_minor") // frozen charge amount, paise
-  currency          String        @default("INR")
-  pricingBreakdown  Json?         @map("pricing_breakdown")
-  status            RequestStatus @default(OPEN)
-  appOrderId        String?       @unique @map("app_order_id")
-  shopifyOrderId    String?       @map("shopify_order_id")
-  shopifyOrderName  String?       @map("shopify_order_name")
-  statusPageUrl     String?       @map("status_page_url")
-  orderSnapshot     Json?         @map("order_snapshot")
-  oversold          Boolean       @default(false)
-  lastError         String?       @map("last_error")
-  retryCount        Int           @default(0) @map("retry_count")
-  nextRetryAt       DateTime?     @map("next_retry_at") @db.Timestamptz(6)
-  expiresAt         DateTime      @map("expires_at") @db.Timestamptz(6)
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  fulfillmentClaimedAt  DateTime? @map("fulfillment_claimed_at") @db.Timestamptz(6)
-
-  shop     Shop             @relation(fields: [shopId], references: [id])
-  customer Customer?        @relation(fields: [customerId], references: [id])
-  attempts PaymentAttempt[]
-
-  @@index([customerId, createdAt(sort: Desc)], map: "requests_by_customer")
-  @@index([status, expiresAt], map: "requests_sweepable")
-  @@map("checkout_requests")
-}
-
-model PaymentAttempt {
-  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  requestId           String        @map("request_id") @db.Uuid
-  pg                  PgProvider
-  pgOrderId           String        @map("pg_order_id")
-  pgPaymentId         String?       @map("pg_payment_id")
-  amountMinor         BigInt        @map("amount_minor") // frozen copy at initiation
-  amountCapturedMinor BigInt?       @map("amount_captured_minor") // < amount_minor only with verified PG offer
-  currency            String
-  status              AttemptStatus @default(INITIATED)
-  failureCode         String?       @map("failure_code")
-  failureReason       String?       @map("failure_reason")
-  charged             Boolean? // on failure: was money debited? drives UX copy
-  paymentUrl          String?       @map("payment_url")
-  refundId            String?       @map("refund_id")
-  refundStatus        String?       @map("refund_status") // PENDING_MANUAL | PROCESSED
-  initiatedAt         DateTime      @default(now()) @map("initiated_at") @db.Timestamptz(6)
-  resolvedAt          DateTime?     @map("resolved_at") @db.Timestamptz(6)
-  presentation        Json?         @map("presentation")   // mode + payment_url | sdk options
-
-  request CheckoutRequest @relation(fields: [requestId], references: [id])
-
-  @@unique([pg, pgOrderId])
-  @@index([status, initiatedAt], map: "attempts_sweepable")
-  @@map("payment_attempts")
-}
-
-model WebhookEvent {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  pg              PgProvider
-  eventId         String    @map("event_id")
-  eventType       String    @map("event_type")
-  pgOrderId       String?   @map("pg_order_id")
-  payload         Json // raw, for audit/replay
-  signatureValid  Boolean   @map("signature_valid")
-  receivedAt      DateTime  @default(now()) @map("received_at") @db.Timestamptz(6)
-  processedAt     DateTime? @map("processed_at") @db.Timestamptz(6)
-  processingError String?   @map("processing_error")
-
-  @@unique([pg, eventId])
-  @@index([processedAt, receivedAt], map: "webhook_retryable")
-  @@map("webhook_events")
-}
-
-model PincodeCache {
-  pincode   String   @id
-  state     String
-  city      String?
-  district  String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  @@map("pincode_cache")
 }

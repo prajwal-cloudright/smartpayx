@@ -1,9 +1,6 @@
 {
   "name": "smartpayx-test-app",
   "private": true,
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "scripts": {
     "build": "react-router build",
     "dev": "shopify app dev",
@@ -20,30 +17,27 @@
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",
     "vite": "vite",
-    "typecheck": "react-router typegen && tsc --noEmit",
-    "db:migrate": "prisma migrate deploy",
-    "db:seed": "prisma db seed"
+    "typecheck": "react-router typegen && tsc --noEmit"
   },
   "type": "module",
   "engines": {
-    "node": ">=20.19 <22 || >=22.12"
+    "node": ">=22.12"
   },
   "dependencies": {
     "@prisma/client": "^6.16.3",
-    "@react-router/dev": "^7.12.0",
-    "@react-router/fs-routes": "^7.12.0",
-    "@react-router/node": "^7.12.0",
-    "@react-router/serve": "^7.12.0",
+    "@react-router/dev": "7.18.2",
+    "@react-router/fs-routes": "7.18.2",
+    "@react-router/node": "7.18.2",
+    "@react-router/serve": "7.18.2",
     "@shopify/app-bridge-react": "^4.2.4",
-    "@shopify/shopify-app-react-router": "^1.2.1",
-    "@shopify/shopify-app-session-storage-prisma": "^9.0.0",
+    "@shopify/shopify-app-react-router": "^3.0.0",
+    "@shopify/shopify-app-session-storage-prisma": "^11.0.0",
     "isbot": "^5.1.31",
     "prisma": "^6.16.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router": "^7.12.0",
-    "vite-tsconfig-paths": "^5.1.4",
-    "zod": "^4.4.3"
+    "react-router": "7.18.2",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
     "@shopify/api-codegen-preset": "^1.2.0",
@@ -62,7 +56,6 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "graphql-config": "^5.1.1",
     "prettier": "^3.6.2",
-    "tsx": "^4.23.11",
     "typescript": "^5.9.3",
     "vite": "^6.3.6"
   },
@@ -73,7 +66,16 @@
     "@shopify/plugin-cloudflare"
   ],
   "overrides": {
-    "p-map": "^4.0.0"
+    "p-map": "^4.0.0",
+    "qs": "^6.16.0"
   },
-  "author": "narayan"
+  "resolutions": {
+    "qs": "^6.16.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "qs": "^6.16.0"
+    }
+  },
+  "author": "pmala"
 }

@@ -1,56 +1,47 @@
-/**
- * App home — redirects merchants to Settings until SmartPayX is configured
- * (no shops row, no PG credentials, or the flag is off).
- */
-import { useLoaderData, useNavigate } from "react-router";
-import type { LoaderFunctionArgs } from "react-router";
+import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
-import {
-  findOrCreateShop,
-  getConfiguredPgs,
-} from "../services/shops/settings.server";
-import { getEnabledPgConfigs } from "../services/shops/shop.server";
-import { useEffect } from "react";
+import { boundary } from "@shopify/shopify-app-react-router/server";
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const { session } = await authenticate.admin(request);
-  const shop = await findOrCreateShop(session.shop);
-  const configured = await getConfiguredPgs(shop.id);
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+await authenticate.admin(request);
+return null;
+};
 
-  return {
-    needsSetup: !shop.spxEnabled || configured.length === 0,
-    shopDomain: shop.shopDomain,
-    enabledPgs: getEnabledPgConfigs(shop).map((c) => c.pg),
-  };
+export default function Index() {
+return ( <s-page heading="FasPe Checkout"> <s-section heading="Welcome to FasPe"> <s-paragraph>
+Manage your checkout experience for your Shopify store. </s-paragraph> </s-section>
+
+
+  <s-section heading="Checkout overview">
+    <s-grid gridTemplateColumns="repeat(2, minmax(0, 1fr))" gap="base">
+      <s-grid-item>
+        <s-box padding="large" borderWidth="base" borderRadius="large">
+          <s-heading>Checkout status</s-heading>
+          <s-paragraph>Setup in progress</s-paragraph>
+        </s-box>
+      </s-grid-item>
+      <s-grid-item>
+        <s-box padding="large" borderWidth="base" borderRadius="large">
+          <s-heading>Payment gateway</s-heading>
+          <s-paragraph>Not connected yet</s-paragraph>
+        </s-box>
+      </s-grid-item>
+    </s-grid>
+  </s-section>
+
+  <s-section heading="Next steps">
+    <s-unordered-list>
+      <s-list-item>Build the new checkout interface.</s-list-item>
+      <s-list-item>Configure the payment gateway.</s-list-item>
+      <s-list-item>Test the checkout flow locally.</s-list-item>
+    </s-unordered-list>
+  </s-section>
+</s-page>
+
+
+);
 }
 
-export default function AppIndex() {
-  const { shopDomain, enabledPgs, needsSetup } = useLoaderData<typeof loader>();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (needsSetup) navigate("/app/settings");
-  }, [needsSetup, navigate]);
-
-  // Render nothing while navigating — App Bridge keeps the loading state.
-  if (needsSetup) return null;
-
-  return (
-    <s-page heading="SmartPayX">
-      <s-section heading="Status">
-        <s-stack direction="block" gap="base">
-          <s-stack direction="inline" gap="small-200" alignItems="center">
-            <s-text>Checkout</s-text>
-            <s-badge tone="success">Live</s-badge>
-          </s-stack>
-          <s-paragraph>
-            SmartPayX is active on {shopDomain} with {enabledPgs.length} payment
-            gateway
-            {enabledPgs.length === 1 ? "" : "s"} enabled.
-          </s-paragraph>
-          <s-button href="/app/settings">Manage settings</s-button>
-        </s-stack>
-      </s-section>
-    </s-page>
-  );
-}
+export const headers: HeadersFunction = (headersArgs) => {
+return boundary.headers(headersArgs);
+};
