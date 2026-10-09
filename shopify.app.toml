@@ -1,12 +1,16 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "5440f31b423320a42dde5b63036b39e4"
-application_url = "https://example.com"
+application_url = "https://smartpayx.cloudright.in"
 embedded = true
 name = "smartpayx-test-app"
 
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+
+# Learn more about access scopes:
+
+# https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+
 scopes = "read_orders,write_orders,read_products,read_inventory,read_customers,write_customers,write_products,read_cart_transforms,read_discounts,read_price_rules,unauthenticated_read_checkouts,unauthenticated_read_metaobjects,unauthenticated_read_product_listings,unauthenticated_write_checkouts,write_cart_transforms,write_discounts,write_price_rules"
 
 [product.metafields.app.demo_info]
@@ -14,15 +18,15 @@ type = "single_line_text_field"
 name = "Demo Source Info"
 description = "Tracks products created by the Shopify app template for development"
 
-  [product.metafields.app.demo_info.access]
-  admin = "merchant_read_write"
+[product.metafields.app.demo_info.access]
+admin = "merchant_read_write"
 
 [metaobjects.app.example]
 name = "Example"
-description = "An example metaobject definition created by this template"
+description = "An example metaobject definition created by the Shopify app template"
 
-  [metaobjects.app.example.access]
-  admin = "merchant_read_write"
+[metaobjects.app.example.access]
+admin = "merchant_read_write"
 
 [metaobjects.app.example.fields.title]
 name = "Title"
@@ -36,21 +40,21 @@ type = "multi_line_text_field"
 [webhooks]
 api_version = "2026-10"
 
-  [[webhooks.subscriptions]]
-  uri = "/webhooks/app/uninstalled"
-  topics = [ "app/uninstalled" ]
+[[webhooks.subscriptions]]
+uri = "/webhooks/app/uninstalled"
+topics = ["app/uninstalled"]
 
-  [[webhooks.subscriptions]]
-  uri = "/webhooks/app/scopes_update"
-  topics = [ "app/scopes_update" ]
+[[webhooks.subscriptions]]
+uri = "/webhooks/app/scopes_update"
+topics = ["app/scopes_update"]
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = ["https://smartpayx.cloudright.in/api/auth"]
 
 [build]
 automatically_update_urls_on_dev = true
 
 [app_proxy]
-url = "https://disclaimers-hash-promising-reflected.trycloudflare.com/proxy"
+url = "https://smartpayx.cloudright.in/proxy"
 subpath = "smartpayx"
 prefix = "apps"
