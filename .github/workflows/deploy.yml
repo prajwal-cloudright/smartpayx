@@ -1,87 +1,30 @@
-name: SmartPayX Full CI/CD
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write
-
-env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: smartpayx
-  EC2_INSTANCE_ID: i-04936d8d79e1c9ce6
-  CONTAINER_NAME: smartpayx-app
-
-jobs:
-  build-and-push:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-
-    outputs:
-      image_uri: ${{ steps.image.outputs.image_uri }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Log in to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push image
-        id: image
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-
-          IMAGE_URI="$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
-          docker build -t "$IMAGE_URI" .
-          docker push "$IMAGE_URI"
-
-          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
-
-  deploy-ec2:
-    name: Deploy to SmartPayX EC2
-    runs-on: ubuntu-latest
-    needs: build-and-push
-
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
       - name: Deploy container through Systems Manager
         env:
           IMAGE_URI: ${{ needs.build-and-push.outputs.image_uri }}
+        shell: bash
         run: |
           set -euo pipefail
 
-          COMMANDS=$(jq -nc --arg image "$IMAGE_URI" --arg container "$CONTAINER_NAME" --arg region "$AWS_REGION" '[
-            "set -e",
-            "aws ecr get-login-password --region " + $region + " | docker login --username AWS --password-stdin " + ($image | split("/")[0]),
-            "docker pull " + $image,
-            "docker stop " + $container + " 2>/dev/null || true",
-            "docker rm " + $container + " 2>/dev/null || true",
-            "docker run -d --name " + $container + " --restart unless-stopped --env-file /opt/smartpayx/.env -p 3000:3000 " + $image,
-            "for i in $(seq 1 30); do if curl -fsS http://127.0.0.1:3000/ >/dev/null; then echo Application health check passed; exit 0; fi; sleep 5; done",
-            "docker logs --tail 100 " + $container + " || true",
-            "exit 1"
-          ]')
+          REGISTRY="${IMAGE_URI%%/*}"
+
+          COMMANDS=$(jq -nc \
+            --arg image "$IMAGE_URI" \
+            --arg container "$CONTAINER_NAME" \
+            --arg region "$AWS_REGION" \
+            --arg registry "$REGISTRY" \
+            '{
+              commands: [
+                "set -e",
+                ("aws ecr get-login-password --region " + $region + " | docker login --username AWS --password-stdin " + $registry),
+                ("docker pull " + $image),
+                ("docker stop " + $container + " 2>/dev/null || true"),
+                ("docker rm " + $container + " 2>/dev/null || true"),
+                ("docker run -d --name " + $container + " --restart unless-stopped --env-file /opt/smartpayx/.env -p 3000:3000 " + $image),
+                "for i in $(seq 1 30); do if curl -fsS http://127.0.0.1:3000/ >/dev/null; then echo Application health check passed; exit 0; fi; sleep 5; done",
+                ("docker logs --tail 100 " + $container + " || true"),
+                "exit 1"
+              ]
+            }')
 
           RESPONSE=$(aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
@@ -120,26 +63,4 @@ jobs:
 
           echo "Timed out waiting for EC2 deployment."
           exit 1
-
-  deploy-shopify:
-    name: Deploy Shopify App Configuration
-    runs-on: ubuntu-latest
-    needs: [build-and-push, deploy-ec2]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Shopify CLI
-        run: npm install --global @shopify/cli@latest
-
-      - name: Deploy Shopify app
-        env:
-          SHOPIFY_APP_AUTOMATION_TOKEN: ${{ secrets.SHOPIFY_CLI_PARTNERS_TOKEN }}
-        run: shopify app deploy --config shopify.app.toml --allow-updates
 
