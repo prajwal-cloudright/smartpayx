@@ -20,7 +20,7 @@ const EnvSchema = z
         },
       ),
 
-    // Shopify app (provided by `shopify app dev` locally, EB env in prod)
+    // Shopify app
     SHOPIFY_API_KEY: z.string().optional(),
     SHOPIFY_API_SECRET: z.string().optional(),
     SHOPIFY_APP_URL: z.string().optional(),
@@ -39,13 +39,13 @@ const EnvSchema = z
       .string()
       .min(24, "shared secret for POST /internal/tick"),
 
-    // Customer session lifetime (fixed TTL, not sliding — see spec §2)
+    // Customer session lifetime
     SESSION_TTL_HOURS: z.coerce.number().positive().default(24),
     SESSION_NEAR_EXPIRY_GRACE_MIN: z.coerce.number().positive().default(30),
 
-    // Providers
-    FAST2SMS_API_KEY: z.string(),
-    FAST2SMS_SENDER_ID: z.string(),
+    // OTP provider — optional while OTP is disabled
+    FAST2SMS_API_KEY: z.string().optional(),
+    FAST2SMS_SENDER_ID: z.string().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.NODE_ENV === "production") {
@@ -90,3 +90,4 @@ function loadEnv(): Env {
 
 export const env: Env = loadEnv();
 export const isProduction = env.NODE_ENV === "production";
+
