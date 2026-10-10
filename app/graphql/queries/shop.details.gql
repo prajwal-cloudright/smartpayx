@@ -1,0 +1,6 @@
+query SpxShopId {
+  shop {
+    id
+    myshopifyDomain
+  }
+}

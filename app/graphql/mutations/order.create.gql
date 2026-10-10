@@ -1,0 +1,26 @@
+mutation SpxOrderCreate(
+  $order: OrderCreateOrderInput!
+  $options: OrderCreateOptionsInput
+) {
+  orderCreate(order: $order, options: $options) {
+    order {
+      id
+      name
+      statusPageUrl
+      displayFinancialStatus
+      totalPriceSet {
+        shopMoney {
+          amount
+          currencyCode
+        }
+      }
+      customer {
+        id
+      }
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}
