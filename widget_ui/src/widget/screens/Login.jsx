@@ -1,6 +1,7 @@
 /**
  * Phone → OTP. Returns { body, actions } so the CTA sits in the sticky bar.
  * Per decisions: reauth renders this same plain prompt (no special copy).
+ * FasPe UI: same drawer chrome, indigo focus, CloudRight footer line.
  */
 import React, { useEffect, useState } from "react";
 import { api, auth, ApiError } from "../../shared/api";
@@ -102,7 +103,7 @@ function LoginScreen({ session, onAuthed }) {
                   inputMode="numeric"
                   autoComplete="tel-national"
                   maxLength={10}
-                  placeholder="00000 00000"
+                  placeholder="Add your 10 digit mobile number"
                   value={phone}
                   error={error}
                   onChange={(e) => {
@@ -181,7 +182,7 @@ function LoginScreen({ session, onAuthed }) {
             Verify & continue
           </Button>
         )}
-        <SecureStrip />
+        <SecureStrip>Secure Payment &bull;</SecureStrip>
       </div>
     </>
   );

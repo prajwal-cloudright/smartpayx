@@ -16,34 +16,30 @@ export const Icon = {
 };
 
 /* --------------------------------------------------------------- brand ----- */
-export function SpxLogo({ size = 20 }) {
+/** Header lockup: bold "Checkout" + orange FasPe pill (matches FasPe_checkout.html). */
+export function SpxLogo() {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-      <svg width={size * 1.35} height={size * 1.35} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        <rect width="32" height="32" rx="9" fill="var(--spx-accent)" />
-        <path d="M18.4 7.5 11 16.8h4.3l-1.4 7.7 7.6-9.6h-4.3l1.2-7.4z" fill="var(--spx-accent-ink)" />
-      </svg>
-      <span style={{ fontWeight: 700, fontSize: size * 0.82, letterSpacing: "-0.03em" }}>
-        SmartPay<span style={{ opacity: 0.55 }}>X</span>
-      </span>
+    <span className="spx-brand">
+      <span className="spx-brand-title">Checkout</span>
+      <span className="spx-brand-pill">FasPe</span>
     </span>
   );
 }
 
+/** Footer strip: "Powered by CloudRight". */
 export function PoweredBy() {
   return (
     <div className="spx-footer">
       <span>Powered by</span>
-      <svg width="13" height="13" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        <rect width="32" height="32" rx="9" fill="var(--spx-ink-2)" />
-        <path d="M18.4 7.5 11 16.8h4.3l-1.4 7.7 7.6-9.6h-4.3l1.2-7.4z" fill="#fff" />
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M7 18a4 4 0 01-.6-7.96A5.5 5.5 0 0117 9.5a4.25 4.25 0 01.5 8.5H7z" fill="var(--spx-ink-2)" />
       </svg>
-      <strong style={{ color: "var(--spx-ink-2)", fontWeight: 620 }}>SmartPayX</strong>
+      <strong style={{ color: "var(--spx-ink-2)", fontWeight: 620 }}>CloudRight</strong>
     </div>
   );
 }
 
-export function SecureStrip({ children = "Payments are encrypted and secure" }) {
+export function SecureStrip({ children = "Secure Payment \u2022 Powered by CloudRight" }) {
   return (
     <div className="spx-secure">
       <Icon.Lock />
@@ -53,6 +49,7 @@ export function SecureStrip({ children = "Payments are encrypted and secure" }) 
 }
 
 /* ------------------------------------------------------------- controls ---- */
+/** variant: "primary" | "secondary" | "ghost" | "danger" | "pay" (black FasPe pay bar). */
 export function Button({ variant = "primary", loading, size, children, ...rest }) {
   return (
     <button

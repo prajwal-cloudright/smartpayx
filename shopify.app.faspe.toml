@@ -1,0 +1,21 @@
+client_id = "665f68325a714648cc692a151c5beb9c"
+name = "Faspe"
+application_url = "https://smartpayx.cloudright.in"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2027-01"
+
+[access_scopes]
+scopes = "read_cart_transforms,read_customers,read_discounts,read_inventory,read_orders,read_price_rules,read_products,unauthenticated_read_checkouts,unauthenticated_read_metaobjects,unauthenticated_read_product_listings,unauthenticated_write_checkouts,write_cart_transforms,write_customers,write_discounts,write_orders,write_price_rules,write_products"
+
+[auth]
+redirect_urls = ["https://smartpayx.cloudright.in/auth/callback"]
+
+[app_proxy]
+url = "https://smartpayx.cloudright.in/proxy"
+subpath = "smartpayx"
+prefix = "apps"
