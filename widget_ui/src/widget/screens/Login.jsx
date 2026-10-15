@@ -182,7 +182,7 @@ function LoginScreen({ session, onAuthed }) {
             Verify & continue
           </Button>
         )}
-        <SecureStrip>Secure Payment &bull;</SecureStrip>
+        <SecureStrip>Secure Payment</SecureStrip>
       </div>
     </>
   );

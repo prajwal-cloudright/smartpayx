@@ -1,11 +1,12 @@
+
 /**
  * Post-payment polling. Runs both for the in-widget CONFIRMING step and for
  * redirect-resume (spx_resume) — in the resume case there is no session at
  * all, only a request_id, and this screen is the entire widget.
  *
- * Poll: 1.5s × 1.3 backoff, capped 5s, 90s ceiling → terminal "we're
- * confirming, check your email". On can_proceed: clear the cart once, then
- * redirect to /pages/spx-thank-you?o={app_order_id}.
+ * Poll: 1.5s × 1.3 backoff, capped 5s, 90s ceiling.
+ * Once the order can proceed, clear the Shopify cart and notify Horizon
+ * before redirecting to /pages/spx-thank-you?o={app_order_id}.
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { api, auth, storefrontCart, ApiError } from "../../shared/api";
@@ -34,20 +35,28 @@ export default function Confirming({ requestId, onRetryPayment }) {
 
     async function tick() {
       if (stopped.current) return;
+
       try {
         const res = await api.paymentStatus(requestId);
 
+        // Clear the storefront cart only when the server says it is safe.
+        // Await completion so Horizon can update before navigation.
         if (res.should_clear_cart && !cleared.current) {
           cleared.current = true;
-          void storefrontCart.clear(); // capture is the point of no return
+          await storefrontCart.clear();
         }
+
         if (res.can_proceed && res.app_order_id) {
           location.assign(
             `/pages/spx-thank-you?o=${encodeURIComponent(res.app_order_id)}`,
           );
-          return; // page unloads
+          return;
         }
-        if (res.status === "AWAITING_PAYMENT" || res.status === "ADDRESS_SET") {
+
+        if (
+          res.status === "AWAITING_PAYMENT" ||
+          res.status === "ADDRESS_SET"
+        ) {
           setFailure(res.failure);
           setView("FAILED");
           return;
@@ -57,20 +66,27 @@ export default function Confirming({ requestId, onRetryPayment }) {
           setView("AUTH");
           return;
         }
-        /* transient — keep polling until the ceiling */
+
+        // Transient errors keep polling until the time ceiling.
       }
+
+      if (stopped.current) return;
+
       if (Date.now() - startedAt > CEILING_MS) {
         setView("TIMEOUT");
         return;
       }
+
       delay = Math.min(delay * 1.3, 5000);
       setTimeout(tick, delay);
     }
+
     void tick();
   }, [requestId]);
 
   useEffect(() => {
     poll();
+
     return () => {
       stopped.current = true;
     };
@@ -120,9 +136,9 @@ export default function Confirming({ requestId, onRetryPayment }) {
           </div>
           <div className="spx-title">Still confirming your payment</div>
           <div className="spx-sub" style={{ maxWidth: 330 }}>
-            This is taking longer than usual. If your payment went through, your
-            order is safe — we'll email your confirmation shortly. It's fine to
-            close this window.
+            This is taking longer than usual. If your payment went through,
+            your order is safe — we'll email your confirmation shortly. It's
+            fine to close this window.
           </div>
         </div>
       </div>
@@ -166,6 +182,7 @@ export function InlineAuth({ onDone, note }) {
   async function send() {
     setBusy(true);
     setError(null);
+
     try {
       const r = await api.sendOtp(phone);
       setChallenge(r.challenge_id);
@@ -176,9 +193,11 @@ export function InlineAuth({ onDone, note }) {
       setBusy(false);
     }
   }
+
   async function verify(full) {
     setBusy(true);
     setError(null);
+
     try {
       const r = await api.verifyOtp(challenge, phone, full);
       auth.set(r.token);
@@ -190,8 +209,11 @@ export function InlineAuth({ onDone, note }) {
       setBusy(false);
     }
   }
+
   useEffect(() => {
-    if (code.length === 6 && !busy) void verify(code); /* eslint-disable-line */
+    if (code.length === 6 && !busy) {
+      void verify(code); /* eslint-disable-line */
+    }
   }, [code]);
 
   return (
@@ -202,6 +224,7 @@ export function InlineAuth({ onDone, note }) {
       <div className="spx-sub" style={{ marginBottom: 20 }}>
         {note}
       </div>
+
       {stage === "PHONE" ? (
         <>
           <Field error={error}>
@@ -221,6 +244,7 @@ export function InlineAuth({ onDone, note }) {
               />
             </div>
           </Field>
+
           <Button
             loading={busy}
             disabled={!/^[6-9]\d{9}$/.test(phone)}
@@ -242,6 +266,7 @@ export function InlineAuth({ onDone, note }) {
               autoFocus
             />
           </Field>
+
           <Button
             loading={busy}
             disabled={code.length !== 6}

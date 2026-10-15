@@ -5,22 +5,6 @@ import { Button, Icon, SecureStrip } from "../../shared/ui";
 import { money } from "../../shared/money";
 import CartSummary from "../components/CartSummary";
 
-const PG_META = {
-  RAZORPAY: {
-    label: "Razorpay",
-    hint: "UPI · Cards · Netbanking · Wallets",
-  },
-  PINELABS: {
-    label: "Pine Labs",
-    hint: "Cards · UPI · EMI · Netbanking",
-  },
-};
-
-/*
- * DEMO ROUTING:
- * These are UI categories, not gateway IDs.
- * Each method is routed to one of the configured payment gateways.
- */
 const PAYMENT_METHODS = [
   {
     id: "UPI",
@@ -29,6 +13,7 @@ const PAYMENT_METHODS = [
     symbol: "↗",
     color: "upi",
     gateway: "RAZORPAY",
+    offer: "10% OFF on UPI payments",
   },
   {
     id: "BANK_CARD_EMI",
@@ -37,6 +22,7 @@ const PAYMENT_METHODS = [
     symbol: "◷",
     color: "emi",
     gateway: "PINELABS",
+    offer: "No Cost EMI",
   },
   {
     id: "CARDLESS_EMI",
@@ -45,6 +31,7 @@ const PAYMENT_METHODS = [
     symbol: "◇",
     color: "cardless",
     gateway: "RAZORPAY",
+    offer: "Instant Cardless EMI available",
   },
   {
     id: "CARDS",
@@ -53,6 +40,7 @@ const PAYMENT_METHODS = [
     symbol: "▰",
     color: "cards",
     gateway: "PINELABS",
+    offer: null,
   },
   {
     id: "NETBANKING",
@@ -61,6 +49,7 @@ const PAYMENT_METHODS = [
     symbol: "▦",
     color: "netbanking",
     gateway: "RAZORPAY",
+    offer: null,
   },
   {
     id: "WALLETS",
@@ -69,14 +58,8 @@ const PAYMENT_METHODS = [
     symbol: "▣",
     color: "wallets",
     gateway: "PINELABS",
+    offer: "Get cashback up to ₹200 on Amazon Pay Balance",
   },
-];
-
-const DEMO_BANKS = [
-  { id: "HDFC", label: "HDFC Bank", initials: "HB" },
-  { id: "ICICI", label: "ICICI Bank", initials: "IB" },
-  { id: "AXIS", label: "Axis Bank", initials: "AB" },
-  { id: "OTHER", label: "Other bank", initials: "+" },
 ];
 
 export default function Payment(props) {
@@ -95,8 +78,6 @@ function PaymentScreen({
   );
 
   const [selectedMethod, setSelectedMethod] = useState("UPI");
-  const [selectedEmiType, setSelectedEmiType] = useState("CREDIT");
-  const [selectedBank, setSelectedBank] = useState("HDFC");
   const [offers, setOffers] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -121,18 +102,12 @@ function PaymentScreen({
     PAYMENT_METHODS[0];
 
   /*
-   * Use the method's preferred gateway if it is configured in this
-   * checkout session. Otherwise, use the first available gateway.
-   *
-   * The payment API continues to receive the gateway ID, just as before.
+   * Preserve the existing gateway routing.
+   * Use the selected method's preferred gateway when available.
+   * Otherwise, fall back to the first configured gateway.
    */
   const availableGateway =
     options.find((opt) => opt.pg === currentMethod.gateway) ?? options[0];
-
-  const offerFor = (gatewayId) =>
-    offers?.find((offer) => offer.pg === gatewayId)?.text ??
-    options.find((opt) => opt.pg === gatewayId)?.offer_text ??
-    null;
 
   async function pay() {
     if (!availableGateway || busy) return;
@@ -198,7 +173,6 @@ function PaymentScreen({
         <CartSummary
           cart={session.cart}
           pricing={session.pricing}
-          defaultOpen
         />
 
         {addr && (
@@ -245,17 +219,20 @@ function PaymentScreen({
           </div>
         </div>
 
-        <div className="spx-method-list" role="radiogroup" aria-label="Payment method">
+        <div
+          className="spx-method-list"
+          role="radiogroup"
+          aria-label="Payment method"
+        >
           {PAYMENT_METHODS.map((method) => {
             const isSelected = selectedMethod === method.id;
-            const gateway =
-              options.find((opt) => opt.pg === method.gateway) ?? options[0];
-            const offer = gateway ? offerFor(gateway.pg) : null;
 
             return (
               <div
                 key={method.id}
-                className={`spx-method-card ${isSelected ? "spx-method-selected" : ""}`}
+                className={`spx-method-card ${
+                  isSelected ? "spx-method-selected" : ""
+                }`}
               >
                 <button
                   type="button"
@@ -268,7 +245,9 @@ function PaymentScreen({
                   }}
                 >
                   <span
-                    className={`spx-method-radio ${isSelected ? "is-checked" : ""}`}
+                    className={`spx-method-radio ${
+                      isSelected ? "is-checked" : ""
+                    }`}
                     aria-hidden="true"
                   >
                     {isSelected && <span />}
@@ -280,83 +259,28 @@ function PaymentScreen({
 
                   <span className="spx-method-copy">
                     <span className="spx-method-name">{method.label}</span>
+
                     <span className="spx-method-description">
                       {method.description}
                     </span>
 
-                    {offer && (
+                    {method.offer && (
                       <span className="spx-method-offer">
                         <Icon.Tag />
-                        {offer}
+                        {method.offer}
                       </span>
                     )}
                   </span>
 
                   <span
-                    className={`spx-method-chevron ${isSelected ? "is-open" : ""}`}
+                    className={`spx-method-chevron ${
+                      isSelected ? "is-open" : ""
+                    }`}
                     aria-hidden="true"
                   >
                     ›
                   </span>
                 </button>
-
-                {isSelected && method.id === "BANK_CARD_EMI" && (
-                  <div className="spx-method-details">
-                    <div
-                      className="spx-emi-tabs"
-                      role="group"
-                      aria-label="EMI card type"
-                    >
-                      <button
-                        type="button"
-                        className={
-                          selectedEmiType === "CREDIT" ? "is-active" : ""
-                        }
-                        onClick={() => setSelectedEmiType("CREDIT")}
-                      >
-                        Credit card EMI
-                      </button>
-
-                      <button
-                        type="button"
-                        className={
-                          selectedEmiType === "DEBIT" ? "is-active" : ""
-                        }
-                        onClick={() => setSelectedEmiType("DEBIT")}
-                      >
-                        Debit card EMI
-                      </button>
-                    </div>
-
-                    <div className="spx-bank-heading">Select bank</div>
-
-                    <div className="spx-bank-grid">
-                      {DEMO_BANKS.map((bank) => (
-                        <button
-                          type="button"
-                          key={bank.id}
-                          className={`spx-bank-option ${
-                            selectedBank === bank.id ? "is-active" : ""
-                          }`}
-                          onClick={() => setSelectedBank(bank.id)}
-                        >
-                          <span className="spx-bank-initials">
-                            {bank.initials}
-                          </span>
-                          <span>{bank.label}</span>
-                          <span className="spx-bank-arrow">›</span>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="spx-emi-note">
-                      Demo selection: {selectedEmiType === "CREDIT"
-                        ? "Credit card EMI"
-                        : "Debit card EMI"}{" "}
-                      · {DEMO_BANKS.find((bank) => bank.id === selectedBank)?.label}
-                    </div>
-                  </div>
-                )}
               </div>
             );
           })}

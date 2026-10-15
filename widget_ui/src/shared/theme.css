@@ -1,21 +1,15 @@
+
 /* ============================================================================
    FasPe design system (Powered by CloudRight)
    Injected into the shadow root via ?inline — never lands in document <head>.
-
-   Layout-critical properties on :host are set INLINE from mount.js with
-   !important, because theme rules like `div:empty { display: none }` reach the
-   host element (shadow children don't satisfy :empty). Only tokens and
-   inherited properties belong in this :host block.
    ========================================================================== */
 
 :host {
-  /* ---- palette (merchant-overridable) ---- */
   --spx-accent: #1c1c22;
   --spx-accent-ink: #ffffff;
   --spx-bg: #ffffff;
   --spx-ink: #0f1115;
 
-  /* ---- derived neutrals ---- */
   --spx-ink-2: #6b7280;
   --spx-ink-3: #9aa1ab;
   --spx-surface: #fafafa;
@@ -29,19 +23,17 @@
   --spx-warn: #b54708;
   --spx-warn-bg: #fffaeb;
 
-  /* ---- FasPe checkout brand tokens ---- */
-  --spx-brand: #6366f1; /* selected / focus (indigo-500) */
-  --spx-brand-soft: #f5f3ff; /* selected row background */
-  --spx-brand-line: #a5b4fc; /* hover border */
-  --spx-badge-from: #ff6b00; /* FasPe pill gradient */
+  --spx-brand: #6366f1;
+  --spx-brand-soft: #f5f3ff;
+  --spx-brand-line: #a5b4fc;
+  --spx-badge-from: #ff6b00;
   --spx-badge-to: #ff8800;
   --spx-pay-bg: #000000;
   --spx-pay-bg-hover: #262626;
   --spx-pay-amount: #34d399;
-  --spx-border: #e5e7eb; /* gray-200 */
-  --spx-drawer-w: 440px;
+  --spx-border: #e5e7eb;
+  --spx-drawer-w: 490px;
 
-  /* ---- shape + depth ---- */
   --spx-r-sm: 8px;
   --spx-r: 12px;
   --spx-r-lg: 12px;
@@ -52,7 +44,6 @@
     -12px 0 48px rgba(16, 24, 40, 0.18), 0 0 1px rgba(16, 24, 40, 0.3);
   --spx-ring: 0 0 0 3px color-mix(in srgb, var(--spx-brand) 16%, transparent);
 
-  /* ---- type ---- */
   --spx-font:
     "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -79,6 +70,7 @@
   margin: 0;
   padding: 0;
 }
+
 button {
   font: inherit;
   color: inherit;
@@ -87,26 +79,28 @@ button {
   background: none;
   -webkit-tap-highlight-color: transparent;
 }
+
 input,
 select,
 textarea {
   font: inherit;
   color: inherit;
 }
+
 img {
   max-width: 100%;
   display: block;
 }
+
 :focus-visible {
   outline: 2px solid var(--spx-accent);
   outline-offset: 2px;
 }
 
 /* ============================================================================
-   Overlay + right-side slide panel (drawer)
-   The checkout is NOT a centred popup any more: a full-height panel slides in
-   from the right edge over a dimmed page, full-width on phones.
+   Overlay + right-side slide panel
    ========================================================================== */
+
 .spx-overlay {
   position: absolute;
   inset: 0;
@@ -115,13 +109,13 @@ img {
   -webkit-backdrop-filter: saturate(120%) blur(2px);
   display: flex;
   align-items: stretch;
-  justify-content: flex-end; /* panel hugs the right edge */
+  justify-content: flex-end;
   animation: spx-fade 220ms ease-out;
 }
 
 .spx-sheet {
-  position: relative; /* containing block for the nested exit sheet */
-  overflow: hidden; /* keeps the exit sheet's corners inside */
+  position: relative;
+  overflow: hidden;
   background: var(--spx-bg);
   width: 100%;
   max-width: var(--spx-drawer-w);
@@ -139,43 +133,29 @@ img {
 }
 
 @keyframes spx-slide-right {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: none;
-  }
+  from { transform: translateX(100%); }
+  to { transform: none; }
 }
+
 @keyframes spx-pop {
-  from {
-    transform: translateY(12px) scale(0.985);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
+  from { transform: translateY(12px) scale(0.985); opacity: 0; }
+  to { transform: none; opacity: 1; }
 }
+
 @keyframes spx-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
+
 @keyframes spx-rise {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: none;
-  }
+  from { transform: translateY(100%); }
+  to { transform: none; }
 }
 
 /* ============================================================================
-   Chrome: header / body / footer
+   Header / body / footer
    ========================================================================== */
+
 .spx-header {
   flex-shrink: 0;
   display: flex;
@@ -185,6 +165,7 @@ img {
   border-bottom: 1px solid #f3f4f6;
   background: var(--spx-bg);
 }
+
 .spx-close {
   width: 32px;
   height: 32px;
@@ -192,27 +173,27 @@ img {
   display: grid;
   place-items: center;
   color: #9ca3af;
-  transition:
-    background 140ms,
-    color 140ms;
+  transition: background 140ms, color 140ms;
 }
+
 .spx-close:hover {
   background: var(--spx-surface-2);
   color: #4b5563;
 }
 
-/* Brand lockup: "Checkout" + orange FasPe pill */
 .spx-brand {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
+
 .spx-brand-title {
   font-weight: 700;
   font-size: 18px;
   letter-spacing: -0.025em;
   color: #111827;
 }
+
 .spx-brand-pill {
   font-size: 12px;
   font-weight: 500;
@@ -227,56 +208,73 @@ img {
   );
 }
 
+/*
+ * The body must not scroll.
+ * Its content area scrolls independently, while the payment actions remain
+ * visible at the bottom of the checkout panel.
+ */
 .spx-body {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
   overscroll-behavior: contain;
   padding: 20px;
   -webkit-overflow-scrolling: touch;
-  /* Screens render their own sticky action bar as the last child, so the body
-     is a column with the content growing and the bar pinned to the bottom. */
   display: flex;
   flex-direction: column;
 }
+
 .spx-body::-webkit-scrollbar {
   width: 10px;
 }
+
 .spx-body::-webkit-scrollbar-thumb {
   background: var(--spx-line-2);
   border-radius: 99px;
   border: 3px solid var(--spx-bg);
 }
 
-/* Content region above the sticky bar. */
+/*
+ * Only the screen content scrolls.
+ * The Pay button and secure-payment message are outside this scroll area.
+ */
 .spx-screen {
-  flex: 1 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--spx-line-2) transparent;
 }
 
-/* Sticky CTA — pinned to the bottom of the scroll area, full-bleed to the
-   sheet edges (negative margins cancel .spx-body padding). */
+.spx-screen::-webkit-scrollbar {
+  width: 6px;
+}
+
+.spx-screen::-webkit-scrollbar-thumb {
+  background: var(--spx-line-2);
+  border-radius: 99px;
+}
+
+/* Keep the Pay button and secure message visible at the bottom. */
 .spx-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 2; /* above scrolling content */
-  margin: 18px -20px -20px;
-  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  margin: 12px -20px -20px;
+  padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--spx-border);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
-  background: var(--spx-bg); /* opaque — content must not show through */
+  background: var(--spx-bg);
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
-/* Soft fade so content dissolves into the bar rather than cutting abruptly. */
 .spx-actions::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -24px;
-  height: 24px;
-  background: linear-gradient(to bottom, transparent, var(--spx-bg));
-  pointer-events: none;
+  content: none;
 }
 
 .spx-footer {
@@ -297,22 +295,26 @@ img {
 /* ============================================================================
    Type
    ========================================================================== */
+
 .spx-title {
   font-size: 19px;
   font-weight: 640;
   letter-spacing: -0.022em;
   line-height: 1.25;
 }
+
 .spx-title-sm {
   font-size: 15px;
   font-weight: 620;
   letter-spacing: -0.014em;
 }
+
 .spx-sub {
   color: var(--spx-ink-2);
   font-size: 13.5px;
   line-height: 1.5;
 }
+
 .spx-eyebrow {
   font-size: 11px;
   font-weight: 650;
@@ -320,6 +322,7 @@ img {
   text-transform: uppercase;
   color: var(--spx-ink-3);
 }
+
 .spx-label {
   display: block;
   font-size: 12.5px;
@@ -327,6 +330,7 @@ img {
   color: var(--spx-ink-2);
   margin-bottom: 7px;
 }
+
 .spx-mono {
   font-variant-numeric: tabular-nums;
 }
@@ -334,6 +338,7 @@ img {
 /* ============================================================================
    Inputs
    ========================================================================== */
+
 .spx-input {
   width: 100%;
   height: 50px;
@@ -342,41 +347,39 @@ img {
   border: 1.5px solid var(--spx-line-2);
   border-radius: var(--spx-r);
   outline: none;
-  transition:
-    border-color 140ms,
-    box-shadow 140ms;
+  transition: border-color 140ms, box-shadow 140ms;
   font-size: 15px;
 }
-.spx-input::placeholder {
-  color: var(--spx-ink-3);
-}
-.spx-input:hover:not([disabled]) {
-  border-color: var(--spx-ink-3);
-}
+
+.spx-input::placeholder { color: var(--spx-ink-3); }
+
+.spx-input:hover:not([disabled]) { border-color: var(--spx-ink-3); }
+
 .spx-input:focus {
   border-color: var(--spx-brand);
   box-shadow: var(--spx-ring);
 }
+
 .spx-input[disabled] {
   background: var(--spx-surface-2);
   color: var(--spx-ink-2);
   cursor: not-allowed;
 }
-.spx-input.spx-invalid {
-  border-color: var(--spx-danger);
-}
+
+.spx-input.spx-invalid { border-color: var(--spx-danger); }
+
 .spx-input.spx-invalid:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--spx-danger) 13%, transparent);
 }
 
-.spx-field {
-  margin-bottom: 14px;
-}
+.spx-field { margin-bottom: 14px; }
+
 .spx-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 11px;
 }
+
 .spx-err {
   display: flex;
   align-items: center;
@@ -385,15 +388,15 @@ img {
   font-size: 12.5px;
   margin-top: 6px;
 }
+
 .spx-hint {
   color: var(--spx-ink-3);
   font-size: 12px;
   margin-top: 6px;
 }
 
-.spx-prefix-wrap {
-  position: relative;
-}
+.spx-prefix-wrap { position: relative; }
+
 .spx-prefix {
   position: absolute;
   left: 15px;
@@ -405,9 +408,8 @@ img {
   padding-right: 11px;
   border-right: 1px solid var(--spx-line-2);
 }
-.spx-prefix + .spx-input {
-  padding-left: 62px;
-}
+
+.spx-prefix + .spx-input { padding-left: 62px; }
 
 .spx-input-icon {
   position: absolute;
@@ -418,11 +420,13 @@ img {
 }
 
 /* OTP */
+
 .spx-otp {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 9px;
 }
+
 .spx-otp input {
   width: 100%;
   height: 56px;
@@ -434,23 +438,21 @@ img {
   border: 1.5px solid var(--spx-line-2);
   border-radius: var(--spx-r);
   outline: none;
-  transition:
-    border-color 140ms,
-    box-shadow 140ms,
-    background 140ms;
+  transition: border-color 140ms, box-shadow 140ms, background 140ms;
 }
+
 .spx-otp input:focus {
   background: var(--spx-bg);
   border-color: var(--spx-brand);
   box-shadow: var(--spx-ring);
 }
-.spx-otp.spx-invalid input {
-  border-color: var(--spx-danger);
-}
+
+.spx-otp.spx-invalid input { border-color: var(--spx-danger); }
 
 /* ============================================================================
    Buttons
    ========================================================================== */
+
 .spx-btn {
   position: relative;
   width: 100%;
@@ -464,42 +466,42 @@ img {
   align-items: center;
   justify-content: center;
   gap: 9px;
-  transition:
-    transform 100ms cubic-bezier(0.32, 0.72, 0, 1),
-    opacity 140ms,
-    background 140ms;
+  transition: transform 100ms cubic-bezier(0.32, 0.72, 0, 1), opacity 140ms, background 140ms;
 }
-.spx-btn:active:not([disabled]) {
-  transform: scale(0.982);
-}
+
+.spx-btn:active:not([disabled]) { transform: scale(0.982); }
+
 .spx-btn-primary {
-  background: var(--spx-pay-bg); /* always black */
+  background: var(--spx-pay-bg);
   color: #fff;
   box-shadow: var(--spx-shadow-sm);
 }
-.spx-btn-primary:hover:not([disabled]) {
-  background: var(--spx-pay-bg-hover);
-}
+
+.spx-btn-primary:hover:not([disabled]) { background: var(--spx-pay-bg-hover); }
+
 .spx-btn-primary[disabled] {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .spx-btn-secondary {
   background: var(--spx-bg);
   color: var(--spx-ink);
   border: 1.5px solid var(--spx-line-2);
 }
+
 .spx-btn-secondary:hover:not([disabled]) {
   background: var(--spx-surface);
   border-color: var(--spx-ink-3);
 }
+
 .spx-btn-ghost {
   background: var(--spx-surface-2);
   color: var(--spx-ink);
 }
-.spx-btn-ghost:hover:not([disabled]) {
-  background: var(--spx-line);
-}
+
+.spx-btn-ghost:hover:not([disabled]) { background: var(--spx-line); }
+
 .spx-btn-pay {
   min-height: 44px;
   padding: 0 16px;
@@ -510,25 +512,27 @@ img {
   font-size: 14px;
   font-weight: 700;
 }
-.spx-btn-pay:hover:not([disabled]) {
-  background: var(--spx-pay-bg-hover);
-}
+
+.spx-btn-pay:hover:not([disabled]) { background: var(--spx-pay-bg-hover); }
+
 .spx-btn-pay[disabled] {
   opacity: 0.4;
   cursor: not-allowed;
 }
-.spx-btn-pay:has(> .spx-spin:only-child) {
-  justify-content: center;
-}
+
+.spx-btn-pay:has(> .spx-spin:only-child) { justify-content: center; }
+
 .spx-btn-pay .spx-pay-amount {
   color: var(--spx-pay-amount);
   font-size: 14px;
   font-weight: 700;
 }
+
 .spx-btn-danger {
   background: var(--spx-danger);
   color: #fff;
 }
+
 .spx-btn-sm {
   min-height: 42px;
   font-size: 14px;
@@ -542,9 +546,9 @@ img {
   text-underline-offset: 3px;
   transition: opacity 140ms;
 }
-.spx-link:hover:not([disabled]) {
-  text-decoration: underline;
-}
+
+.spx-link:hover:not([disabled]) { text-decoration: underline; }
+
 .spx-link[disabled] {
   color: var(--spx-ink-3);
   cursor: default;
@@ -555,6 +559,7 @@ img {
   align-items: baseline;
   gap: 7px;
 }
+
 .spx-btn-amount b {
   font-size: 16.5px;
   font-weight: 680;
@@ -563,15 +568,16 @@ img {
 /* ============================================================================
    Cards & selectable rows
    ========================================================================== */
+
 .spx-card {
   background: var(--spx-bg);
   border: 1px solid var(--spx-line);
   border-radius: var(--spx-r-lg);
   overflow: hidden;
 }
-.spx-card-pad {
-  padding: 15px 16px;
-}
+
+.spx-card-pad { padding: 15px 16px; }
+
 .spx-card-muted {
   background: var(--spx-surface);
   border-color: transparent;
@@ -588,25 +594,24 @@ img {
   background: var(--spx-bg);
   border: 1px solid var(--spx-border);
   border-radius: var(--spx-r-lg);
-  transition:
-    border-color 160ms,
-    background 160ms;
+  transition: border-color 160ms, background 160ms;
 }
-.spx-option:hover:not(.spx-on) {
-  border-color: var(--spx-brand);
-}
+
+.spx-option:hover:not(.spx-on) { border-color: var(--spx-brand); }
+
 .spx-option.spx-on {
   border-color: var(--spx-brand);
   background: var(--spx-brand-soft);
 }
-.spx-option + .spx-option {
-  margin-top: 10px;
-}
+
+.spx-option + .spx-option { margin-top: 10px; }
+
 .spx-option-icon {
   font-size: 20px;
   line-height: 1;
   flex-shrink: 0;
 }
+
 .spx-option-title {
   display: block;
   font-size: 12px;
@@ -614,26 +619,30 @@ img {
   color: #111827;
   line-height: 1.4;
 }
+
 .spx-option-sub {
   display: block;
   font-size: 10px;
   color: #6b7280;
   line-height: 1.4;
 }
+
 .spx-option-offer {
   display: block;
   margin-top: 4px;
   font-size: 10px;
   font-weight: 500;
-  color: #059669; /* emerald-600 */
+  color: #059669;
 }
 
-/* ---- Payment method rows (ported 1:1 from FasPe_checkout.html) ---- */
+/* Payment method rows */
+
 .spx-methods {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 .spx-method {
   width: 100%;
   text-align: left;
@@ -645,54 +654,58 @@ img {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  transition:
-    border-color 160ms,
-    background 160ms;
+  transition: border-color 160ms, background 160ms;
 }
+
 .spx-method:hover,
-.spx-method.spx-sel {
-  border-color: var(--spx-brand);
-}
-.spx-method.spx-sel {
-  background: var(--spx-brand-soft);
-}
+.spx-method.spx-sel { border-color: var(--spx-brand); }
+
+.spx-method.spx-sel { background: var(--spx-brand-soft); }
+
 .spx-m-left {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0;
 }
+
 .spx-m-icon {
   font-size: 20px;
   line-height: 1;
   flex-shrink: 0;
 }
+
 .spx-m-title {
+  display: block;
   font-size: 12px;
   font-weight: 700;
   color: #111827;
   line-height: 1.4;
 }
+
 .spx-m-sub {
+  display: block;
   font-size: 10px;
   line-height: 1.4;
   color: #6b7280;
 }
+
 .spx-m-emerald { color: #059669; font-weight: 500; }
 .spx-m-amber { color: #d97706; font-weight: 500; }
 .spx-m-indigo { color: #4338ca; font-weight: 600; }
 .spx-m-green { color: #16a34a; font-weight: 600; margin-top: 4px; }
+
 .spx-m-arrow {
   color: #9ca3af;
   font-size: 14px;
   flex-shrink: 0;
   transition: transform 200ms;
 }
-.spx-m-arrow.spx-open {
-  transform: rotate(180deg);
-}
+
+.spx-m-arrow.spx-open { transform: rotate(180deg); }
 
 /* Bank EMI accordion */
+
 .spx-acc {
   border: 1px solid var(--spx-border);
   border-radius: 12px;
@@ -700,31 +713,35 @@ img {
   overflow: hidden;
   transition: border-color 160ms;
 }
+
 .spx-acc.spx-sel,
-.spx-acc:hover {
-  border-color: var(--spx-brand);
-}
+.spx-acc:hover { border-color: var(--spx-brand); }
+
 .spx-acc > .spx-method {
   border: 0;
   border-radius: 0;
   background: transparent;
 }
+
 .spx-acc-body {
   border-top: 1px solid #f3f4f6;
   background: #f9fafb;
   padding: 12px;
 }
+
 .spx-acc-label {
   font-size: 12px;
   font-weight: 600;
   color: #374151;
   margin-bottom: 10px;
 }
+
 .spx-bank-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
+
 .spx-bank {
   min-width: 0;
   min-height: 58px;
@@ -736,24 +753,26 @@ img {
   border: 1px solid var(--spx-border);
   border-radius: 10px;
   cursor: pointer;
-  transition:
-    border-color 0.2s,
-    background 0.2s;
+  transition: border-color 0.2s, background 0.2s;
 }
+
 .spx-bank:hover {
   border-color: var(--spx-brand-line);
   background: #fafaff;
 }
+
 .spx-bank.spx-sel {
   border-color: var(--spx-brand);
   background: var(--spx-brand-soft);
 }
+
 .spx-bank input[type="radio"] {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
   accent-color: #4f46e5;
 }
+
 .spx-bank-logos {
   flex: 1;
   min-width: 0;
@@ -762,6 +781,7 @@ img {
   justify-content: space-around;
   gap: 8px;
 }
+
 .spx-bank-logo {
   width: 72px;
   max-width: 100%;
@@ -772,18 +792,20 @@ img {
   justify-content: center;
   padding: 3px;
 }
+
 .spx-bank-logo img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }
+
 .spx-bank-logo b {
   font-size: 10px;
   font-weight: 800;
 }
-.spx-bank-other {
-  min-height: 72px;
-}
+
+.spx-bank-other { min-height: 72px; }
+
 .spx-bank-other-icon {
   width: 30px;
   height: 24px;
@@ -794,11 +816,13 @@ img {
   border-radius: 9px;
   background: #eeebff;
 }
+
 .spx-bank-other-label {
   font-size: 12px;
   font-weight: 600;
   color: #374151;
 }
+
 .spx-bank-msg {
   margin-top: 12px;
   font-size: 12px;
@@ -807,6 +831,7 @@ img {
 }
 
 /* Cardless EMI */
+
 .spx-cardless {
   padding: 12px;
   border: 1px solid #c7d2fe;
@@ -815,24 +840,25 @@ img {
   cursor: pointer;
   transition: border-color 160ms;
 }
+
 .spx-cardless:hover,
-.spx-cardless.spx-sel {
-  border-color: var(--spx-brand);
-}
-.spx-cardless.spx-sel {
-  background: var(--spx-brand-soft);
-}
+.spx-cardless.spx-sel { border-color: var(--spx-brand); }
+
+.spx-cardless.spx-sel { background: var(--spx-brand-soft); }
+
 .spx-cardless-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
 }
+
 .spx-cardless-select {
   font-size: 12px;
   font-weight: 700;
   color: #4f46e5;
 }
+
 .spx-juspay {
   margin: 6px 0 0 32px;
   padding: 8px;
@@ -843,15 +869,14 @@ img {
   font-size: 10px;
   line-height: 1.5;
 }
+
 .spx-juspay b {
   color: #1e3a8a;
   font-weight: 700;
 }
-.spx-juspay u {
-  font-weight: 600;
-}
 
-/* Section heading — "PAYMENT OPTIONS" */
+.spx-juspay u { font-weight: 600; }
+
 .spx-section-title {
   font-size: 12px;
   font-weight: 700;
@@ -872,9 +897,9 @@ img {
   place-items: center;
   transition: border-color 160ms;
 }
-.spx-on .spx-radio {
-  border-color: var(--spx-brand);
-}
+
+.spx-on .spx-radio { border-color: var(--spx-brand); }
+
 .spx-on .spx-radio::after {
   content: "";
   width: 8px;
@@ -883,13 +908,10 @@ img {
   background: var(--spx-brand);
   animation: spx-pop-dot 180ms cubic-bezier(0.32, 0.72, 0, 1);
 }
+
 @keyframes spx-pop-dot {
-  from {
-    transform: scale(0);
-  }
-  to {
-    transform: none;
-  }
+  from { transform: scale(0); }
+  to { transform: none; }
 }
 
 .spx-badge {
@@ -904,10 +926,12 @@ img {
   background: var(--spx-success-bg);
   color: var(--spx-success);
 }
+
 .spx-badge-neutral {
   background: var(--spx-surface-2);
   color: var(--spx-ink-2);
 }
+
 .spx-badge-warn {
   background: var(--spx-warn-bg);
   color: var(--spx-warn);
@@ -916,6 +940,7 @@ img {
 /* ============================================================================
    Cart summary
    ========================================================================== */
+
 .spx-summary-head {
   width: 100%;
   display: flex;
@@ -925,15 +950,12 @@ img {
   text-align: left;
   transition: background 140ms;
 }
-.spx-summary-head:hover {
-  background: var(--spx-surface);
-}
-.spx-chevron {
-  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-.spx-chevron.spx-open {
-  transform: rotate(180deg);
-}
+
+.spx-summary-head:hover { background: var(--spx-surface); }
+
+.spx-chevron { transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1); }
+
+.spx-chevron.spx-open { transform: rotate(180deg); }
 
 .spx-line-item {
   display: flex;
@@ -941,13 +963,14 @@ img {
   padding: 13px 0;
   align-items: center;
 }
-.spx-line-item + .spx-line-item {
-  border-top: 1px solid var(--spx-line);
-}
+
+.spx-line-item + .spx-line-item { border-top: 1px solid var(--spx-line); }
+
 .spx-thumb-wrap {
   position: relative;
   flex-shrink: 0;
 }
+
 .spx-thumb {
   width: 52px;
   height: 52px;
@@ -956,6 +979,7 @@ img {
   background: var(--spx-surface-2);
   border: 1px solid var(--spx-line);
 }
+
 .spx-qty-dot {
   position: absolute;
   top: -6px;
@@ -972,6 +996,7 @@ img {
   place-items: center;
   border: 2px solid var(--spx-bg);
 }
+
 .spx-item-title {
   font-size: 13.5px;
   font-weight: 560;
@@ -990,10 +1015,12 @@ img {
   font-size: 13.5px;
   color: var(--spx-ink-2);
 }
+
 .spx-price-row b {
   color: var(--spx-ink);
   font-weight: 560;
 }
+
 .spx-price-row.spx-total {
   margin-top: 8px;
   padding-top: 13px;
@@ -1003,14 +1030,16 @@ img {
   color: var(--spx-ink);
   letter-spacing: -0.018em;
 }
+
 .spx-save-note {
   color: var(--spx-success);
   font-weight: 560;
 }
 
 /* ============================================================================
-   Feedback: skeleton, spinner, notices
+   Feedback
    ========================================================================== */
+
 .spx-skel {
   background: linear-gradient(
     100deg,
@@ -1022,13 +1051,10 @@ img {
   animation: spx-shimmer 1.4s ease-in-out infinite;
   border-radius: var(--spx-r-sm);
 }
+
 @keyframes spx-shimmer {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -60% 0;
-  }
+  from { background-position: 200% 0; }
+  to { background-position: -60% 0; }
 }
 
 .spx-spin {
@@ -1039,16 +1065,16 @@ img {
   border-top-color: currentColor;
   animation: spx-rot 640ms linear infinite;
 }
+
 .spx-spin-lg {
   width: 38px;
   height: 38px;
   border-width: 3px;
   color: var(--spx-accent);
 }
+
 @keyframes spx-rot {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .spx-notice {
@@ -1061,14 +1087,17 @@ img {
   line-height: 1.45;
   margin-bottom: 14px;
 }
+
 .spx-notice-warn {
   background: var(--spx-warn-bg);
   color: var(--spx-warn);
 }
+
 .spx-notice-err {
   background: var(--spx-danger-bg);
   color: var(--spx-danger);
 }
+
 .spx-notice-info {
   background: var(--spx-surface-2);
   color: var(--spx-ink-2);
@@ -1077,6 +1106,7 @@ img {
 /* ============================================================================
    Status screens
    ========================================================================== */
+
 .spx-center {
   display: flex;
   flex-direction: column;
@@ -1085,6 +1115,7 @@ img {
   gap: 14px;
   padding: 44px 16px;
 }
+
 .spx-status-icon {
   width: 72px;
   height: 72px;
@@ -1093,33 +1124,32 @@ img {
   place-items: center;
   animation: spx-pop-in 340ms cubic-bezier(0.32, 0.72, 0, 1);
 }
+
 .spx-status-ok {
   background: var(--spx-success-bg);
   color: var(--spx-success);
 }
+
 .spx-status-bad {
   background: var(--spx-danger-bg);
   color: var(--spx-danger);
 }
+
 .spx-status-wait {
   background: var(--spx-surface-2);
   color: var(--spx-ink-2);
 }
+
 @keyframes spx-pop-in {
-  from {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: none; opacity: 1; }
 }
 
 .spx-dots {
   display: inline-flex;
   gap: 4px;
 }
+
 .spx-dots i {
   width: 6px;
   height: 6px;
@@ -1127,29 +1157,19 @@ img {
   background: var(--spx-ink-3);
   animation: spx-bounce 1.2s infinite;
 }
-.spx-dots i:nth-child(2) {
-  animation-delay: 0.15s;
-}
-.spx-dots i:nth-child(3) {
-  animation-delay: 0.3s;
-}
+
+.spx-dots i:nth-child(2) { animation-delay: 0.15s; }
+.spx-dots i:nth-child(3) { animation-delay: 0.3s; }
+
 @keyframes spx-bounce {
-  0%,
-  60%,
-  100% {
-    transform: none;
-    opacity: 0.45;
-  }
-  30% {
-    transform: translateY(-5px);
-    opacity: 1;
-  }
+  0%, 60%, 100% { transform: none; opacity: 0.45; }
+  30% { transform: translateY(-5px); opacity: 1; }
 }
 
 /* ============================================================================
-   Exit confirmation — nested INSIDE .spx-sheet (its positioned ancestor), so
-   it can never span the viewport.
+   Exit confirmation
    ========================================================================== */
+
 .spx-exit-scrim {
   position: absolute;
   inset: 0;
@@ -1159,6 +1179,7 @@ img {
   align-items: flex-end;
   animation: spx-fade 160ms ease-out;
 }
+
 .spx-exit-sheet {
   width: 100%;
   background: var(--spx-bg);
@@ -1167,6 +1188,7 @@ img {
   box-shadow: 0 -10px 40px rgba(16, 24, 40, 0.18);
   animation: spx-rise 260ms cubic-bezier(0.32, 0.72, 0, 1);
 }
+
 .spx-grabber {
   width: 38px;
   height: 4px;
@@ -1174,6 +1196,7 @@ img {
   background: var(--spx-line-2);
   margin: -8px auto 16px;
 }
+
 .spx-exit-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1181,26 +1204,24 @@ img {
   margin-top: 20px;
 }
 
-/* Secure strip */
+/* Secure-payment message — stays visible below Pay */
 .spx-secure {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  margin: 0;
+  padding: 0;
   color: #9ca3af;
   font-size: 10px;
   font-weight: 500;
+  line-height: 1.4;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-/* Payment method selection */
+/* ============================================================================
+   Payment method selection
+   ========================================================================== */
+
 .spx-method-list {
   display: flex;
   flex-direction: column;
@@ -1246,9 +1267,7 @@ img {
   background: #fff;
 }
 
-.spx-method-radio.is-checked {
-  border-color: #7565ff;
-}
+.spx-method-radio.is-checked { border-color: #7565ff; }
 
 .spx-method-radio.is-checked > span {
   width: 10px;
@@ -1323,9 +1342,7 @@ img {
   transition: transform 0.18s ease;
 }
 
-.spx-method-chevron.is-open {
-  transform: rotate(90deg);
-}
+.spx-method-chevron.is-open { transform: rotate(90deg); }
 
 .spx-method-offer {
   display: inline-flex;
@@ -1347,6 +1364,7 @@ img {
 }
 
 /* Expanded Bank Card EMI panel */
+
 .spx-method-details {
   padding: 16px;
   border-top: 1px solid #edf0f6;
@@ -1462,13 +1480,9 @@ img {
     min-width: 44px;
   }
 
-  .spx-method-name {
-    font-size: 14px;
-  }
+  .spx-method-name { font-size: 14px; }
 
-  .spx-method-description {
-    font-size: 12px;
-  }
+  .spx-method-description { font-size: 12px; }
 
   .spx-bank-option {
     gap: 6px;
@@ -1480,5 +1494,14 @@ img {
     width: 30px;
     height: 30px;
     min-width: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

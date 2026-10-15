@@ -4,8 +4,7 @@
  *
  * State discipline: the server's /request response IS the state. `step` is
  * never derived locally — every screen renders what the server last said, and
- * every mutation re-syncs. This is what makes redirect-resume and hard-refresh
- * land on the correct screen with zero preserved DOM.
+ * every mutation re-syncs.
  */
 import React, { useEffect, useReducer, useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
@@ -23,9 +22,9 @@ const log = (...a) =>
   DEBUG && console.log("%c[SPX:app]", "color:#0e7a5f;font-weight:700", ...a);
 
 const initial = {
-  phase: "LOADING", // LOADING | READY | RESUME | FATAL
-  session: null, // last /request response — the source of truth
-  step: null, // server-declared step
+  phase: "LOADING",
+  session: null,
+  step: null,
   resumeRequestId: null,
   returnPath: "/",
   exitAsk: false,
@@ -42,27 +41,63 @@ function reducer(state, a) {
         step: a.session.step,
         notice: a.notice ?? null,
       };
+
     case "STEP":
       return { ...state, step: a.step };
+
     case "NOTICE":
       return { ...state, notice: a.notice };
+
     case "EXIT":
       return { ...state, exitAsk: a.value };
+
     case "FATAL":
       return {
         ...state,
         phase: "FATAL",
         notice: { tone: "err", text: a.message },
       };
+
     default:
       return state;
   }
 }
 
+/**
+ * Keep one React root for the lifetime of this page.
+ * Each opening gets a unique Widget key so old checkout state is never reused.
+ */
 let mounted = null;
+let openInstanceId = 0;
 
-export function open({ settings, returnPath = "/", resumeRequestId = null }) {
-  log("open()", { returnPath, resumeRequestId });
+function setHostVisible(visible) {
+  const host = document.getElementById("spx-widget-host");
+  if (!host) return;
+
+  if (visible) {
+    host.style.setProperty("display", "block", "important");
+    host.style.setProperty("position", "fixed", "important");
+    host.style.setProperty("inset", "0", "important");
+    host.style.setProperty("z-index", "2147483000", "important");
+    host.style.setProperty("visibility", "visible", "important");
+    host.style.setProperty("opacity", "1", "important");
+    host.style.setProperty("pointer-events", "auto", "important");
+  } else {
+    host.style.setProperty("display", "none", "important");
+    host.style.setProperty("visibility", "hidden", "important");
+    host.style.setProperty("pointer-events", "none", "important");
+  }
+}
+
+export function open({
+  settings,
+  returnPath = "/",
+  resumeRequestId = null,
+}) {
+  const instanceId = ++openInstanceId;
+
+  log("open()", { returnPath, resumeRequestId, instanceId });
+
   try {
     const outlet = createShadowMount("spx-widget-host", {
       accent: settings.accent,
@@ -70,33 +105,50 @@ export function open({ settings, returnPath = "/", resumeRequestId = null }) {
       bg: settings.bg,
       ink: settings.ink,
     });
-    if (mounted) mounted.unmount();
-    mounted = createRoot(outlet);
+
+    setHostVisible(true);
+    document.documentElement.style.overflow = "hidden";
+
+    if (!mounted) {
+      mounted = createRoot(outlet);
+      log("React root created");
+    }
+
     mounted.render(
-      <ErrorBoundary>
+      <ErrorBoundary key={`error-${instanceId}`}>
         <Widget
+          key={instanceId}
           returnPath={returnPath}
           resumeRequestId={resumeRequestId}
           onClose={close}
         />
       </ErrorBoundary>,
     );
-    document.documentElement.style.overflow = "hidden";
-    log("render dispatched");
+
+    log("fresh checkout render requested", { instanceId });
   } catch (e) {
     console.error("[SPX:app] open() threw", e);
+
+    setHostVisible(false);
+    document.documentElement.style.overflow = "";
+
+    window.dispatchEvent(new Event("spx:checkout-closed"));
+
     throw e;
   }
 }
 
 function close() {
+  log("close()");
+
   if (mounted) {
-    mounted.unmount();
-    mounted = null;
+    mounted.render(null);
   }
-  const host = document.getElementById("spx-widget-host");
-  if (host) host.style.setProperty("display", "none", "important"); // stop swallowing clicks
+
+  setHostVisible(false);
   document.documentElement.style.overflow = "";
+
+  window.dispatchEvent(new Event("spx:checkout-closed"));
 }
 
 function Widget({ returnPath, resumeRequestId, onClose }) {
@@ -105,20 +157,26 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
     returnPath,
     ...(resumeRequestId ? { phase: "RESUME", resumeRequestId } : {}),
   });
+
   const cartTokenRef = useRef(null);
 
-  /** (Re)load the checkout session — the only state authority. */
+  /** The server's /request response is the source of truth. */
   const sync = useCallback(async (notice) => {
     try {
-      cartTokenRef.current ??= await storefrontCart.token();
-      if (!cartTokenRef.current) {
+      // Read the current storefront cart for each fresh checkout session.
+      const cartToken = await storefrontCart.token();
+
+      if (!cartToken) {
         dispatch({
           type: "FATAL",
           message: "We couldn't read your cart. Please refresh and try again.",
         });
         return null;
       }
-      const session = await api.request(cartTokenRef.current);
+
+      cartTokenRef.current = cartToken;
+
+      const session = await api.request(cartToken);
       dispatch({ type: "SESSION", session, notice });
       return session;
     } catch (e) {
@@ -134,28 +192,27 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
   }, []);
 
   useEffect(() => {
-    if (!resumeRequestId) void sync();
+    if (!resumeRequestId) {
+      void sync();
+    }
   }, [resumeRequestId, sync]);
 
-  // Escape closes via the confirmation, never directly.
+  // Escape opens the exit confirmation instead of directly closing checkout.
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === "Escape" && !state.exitAsk)
+      if (e.key === "Escape" && !state.exitAsk) {
         dispatch({ type: "EXIT", value: true });
+      }
     };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [state.exitAsk]);
 
   const requestId = state.session?.request_id ?? state.resumeRequestId;
-  const paying = state.step === "CONFIRMING" || state.phase === "RESUME";
+  const paying =
+    state.step === "CONFIRMING" || state.phase === "RESUME";
 
-  /**
-   * Screens are REAL components rendered as JSX — never called as functions.
-   * Calling them directly attaches their hooks to Widget's hook list, which
-   * changes length as `step` changes and throws React error #310.
-   * Each screen renders its own <div className="spx-actions"> as its last child.
-   */
   function renderScreen() {
     if (state.phase === "FATAL") {
       return (
@@ -168,8 +225,12 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
               <div className="spx-title">{state.notice?.text}</div>
             </div>
           </div>
+
           <div className="spx-actions">
-            <button className="spx-btn spx-btn-secondary" onClick={onClose}>
+            <button
+              className="spx-btn spx-btn-secondary"
+              onClick={onClose}
+            >
               Close
             </button>
           </div>
@@ -195,13 +256,27 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
       );
     }
 
-    if (state.phase === "LOADING" || !state.session) return <BootSkeleton />;
+    if (state.phase === "LOADING" || !state.session) {
+      return <BootSkeleton />;
+    }
 
     switch (state.step) {
       case "LOGIN":
-        return <Login session={state.session} onAuthed={() => void sync()} />;
+        return (
+          <Login
+            session={state.session}
+            onAuthed={() => void sync()}
+          />
+        );
+
       case "ADDRESS":
-        return <Address session={state.session} onDone={() => void sync()} />;
+        return (
+          <Address
+            session={state.session}
+            onDone={() => void sync()}
+          />
+        );
+
       case "PG_SELECTION":
         return (
           <Payment
@@ -214,9 +289,12 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
               })
             }
             onAttemptReleased={() => void sync()}
-            onEditAddress={() => dispatch({ type: "STEP", step: "ADDRESS" })}
+            onEditAddress={() =>
+              dispatch({ type: "STEP", step: "ADDRESS" })
+            }
           />
         );
+
       default:
         return <BootSkeleton />;
     }
@@ -232,6 +310,7 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
       <div className="spx-sheet">
         <header className="spx-header">
           <SpxLogo />
+
           <button
             className="spx-close"
             aria-label="Close checkout"
@@ -252,6 +331,7 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
               <span>{state.notice.text}</span>
             </div>
           )}
+
           {renderScreen()}
         </div>
 
@@ -281,20 +361,24 @@ function BootSkeleton() {
   );
 }
 
-/** Surfaces render errors instead of leaving an empty shadow root. */
+/** Show a visible fallback instead of leaving an empty shadow root. */
 class ErrorBoundary extends React.Component {
   constructor(p) {
     super(p);
     this.state = { error: null };
   }
+
   static getDerivedStateFromError(error) {
     return { error };
   }
+
   componentDidCatch(error, info) {
     console.error("[SPX:app] render error", error, info);
   }
+
   render() {
     if (!this.state.error) return this.props.children;
+
     return (
       <div className="spx-overlay">
         <div className="spx-sheet">
@@ -303,12 +387,13 @@ class ErrorBoundary extends React.Component {
               <div className="spx-status-icon spx-status-bad">
                 <Icon.Alert />
               </div>
-              <div className="spx-title">Checkout couldn&apos;t load</div>
+              <div className="spx-title">Checkout couldn't load</div>
               <div className="spx-sub">
                 {String(this.state.error?.message ?? this.state.error)}
               </div>
             </div>
           </div>
+
           <div className="spx-actions">
             <button
               className="spx-btn spx-btn-primary"
