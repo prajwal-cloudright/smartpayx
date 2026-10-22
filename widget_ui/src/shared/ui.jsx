@@ -21,7 +21,7 @@ export function SpxLogo() {
   return (
     <span className="spx-brand">
       <span className="spx-brand-title">Checkout</span>
-      <span className="spx-brand-pill">FasPe</span>
+      <span className="spx-brand-pill">CloudRight</span>
     </span>
   );
 }

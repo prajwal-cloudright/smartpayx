@@ -4,6 +4,7 @@
  * and opens the SmartPayX checkout panel.
  */
 import { readBlockSettings } from "../shared/mount";
+import { auth } from "../shared/api";
 
 const SETTINGS_ID = "spx-embed-settings";
 const settings = readBlockSettings(SETTINGS_ID);
@@ -187,12 +188,14 @@ function restoreShopifyCartDrawerStyles() {
 }
 
 async function openWidget(opts) {
+  sessionStorage.clear();
   const mod = await loadApp();
   mod.open({ settings, ...opts });
 }
 
 function onIntercept(e) {
   try {
+    sessionStorage.clear();
     if (settings.enabled !== true) return;
 
     e.preventDefault();

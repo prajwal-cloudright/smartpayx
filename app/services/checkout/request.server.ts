@@ -1,10 +1,11 @@
+
 /**
  * Checkout request lifecycle — dedup, resume, re-pricing, step resolution.
  *
- * The dedup invariant (spec §3): at most ONE non-terminal request per
+ * The dedup invariant (spec §3): at most ONE mutable/pre-capture request per
  * (shop, cart_token), enforced by the partial unique index
- * `one_open_request_per_cart`. Terminal requests are invisible to lookup, which
- * is what makes the never-rotating cart token safe to key on.
+ * `one_open_request_per_cart`. Captured/reconciling requests are immutable payment
+ * records and must not block a new checkout after the buyer adds new cart items.
  */
 import {
   Prisma,
@@ -25,8 +26,6 @@ export const OPEN_STATUSES: RequestStatus[] = [
   RequestStatus.ADDRESS_SET,
   RequestStatus.AWAITING_PAYMENT,
   RequestStatus.ATTEMPT_INITIATED,
-  RequestStatus.CAPTURED,
-  RequestStatus.RECONCILING,
 ];
 
 /** Statuses where cart/pricing may still change. Anything at or past CAPTURED is frozen. */
@@ -37,7 +36,11 @@ export const MUTABLE_STATUSES: RequestStatus[] = [
 ];
 
 export type CheckoutStep =
-  "LOGIN" | "ADDRESS" | "PG_SELECTION" | "CONFIRMING" | "COMPLETED";
+  | "LOGIN"
+  | "ADDRESS"
+  | "PG_SELECTION"
+  | "CONFIRMING"
+  | "COMPLETED";
 
 function requestTtl(): Date {
   return new Date(Date.now() + 30 * 60 * 1000); // 30 min, refreshed on activity

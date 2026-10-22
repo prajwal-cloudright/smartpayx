@@ -11,6 +11,7 @@ import { api, ApiError } from "../shared/api";
 import { SpxLogo, PoweredBy, Skeleton, Icon } from "../shared/ui";
 import { money } from "../shared/money";
 import { InlineAuth } from "../widget/screens/Confirming";
+import { auth } from "../shared/api";
 
 const WRAP = { maxWidth: 620, margin: "0 auto", padding: "32px 16px 48px" };
 const CART_UPDATE_EVENT = "shopify:cart:lines-update";
@@ -104,6 +105,9 @@ export default function ThankYou({ appOrderId }) {
 
     try {
       setState({ view: "OK", data: await api.order(appOrderId) });
+      const data = await api.order(appOrderId);
+auth.clear();
+setState({ view: "OK", data });
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
         setState({ view: "AUTH" });
