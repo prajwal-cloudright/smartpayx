@@ -198,14 +198,10 @@ img {
   font-size: 12px;
   font-weight: 500;
   line-height: 1;
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: 99px;
-  color: #fff;
-  background: linear-gradient(
-    135deg,
-    var(--spx-badge-from) 0%,
-    var(--spx-badge-to) 100%
-  );
+  color: #00d4ff;
+  background: black;
 }
 
 /*
