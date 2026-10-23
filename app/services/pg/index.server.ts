@@ -3,10 +3,12 @@ import type { PgAdapter } from "./types";
 import { razorpayAdapter } from "./razorpay.server";
 import { pinelabsAdapter } from "./pinelabs.server";
 import { ConfigError } from "../errors.server";
+import { payuAdapter } from "./payu.server";
 
 const ADAPTERS: Record<PgProvider, PgAdapter> = {
   [PgProvider.RAZORPAY]: razorpayAdapter,
   [PgProvider.PINELABS]: pinelabsAdapter,
+  [PgProvider.PAYU]: payuAdapter,
 };
 
 export function getAdapter(pg: PgProvider): PgAdapter {

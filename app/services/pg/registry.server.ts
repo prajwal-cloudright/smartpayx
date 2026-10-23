@@ -80,6 +80,38 @@ export const PG_DEFINITIONS: Record<PgProvider, PgDefinition> = {
       secret_key: nonEmpty("Secret key"),
     }),
   },
+
+    [PgProvider.PAYU]: {
+    pg: PgProvider.PAYU,
+    label: "PayU",
+    fields: [
+      { key: "merchant_key", label: "Merchant key", type: "text" },
+      {
+        key: "environment",
+        label: "Environment",
+        type: "text",
+        helpText: "Type live (secure.payu.in) or test (test.payu.in)",
+      },
+      {
+        key: "merchant_salt",
+        label: "Merchant salt",
+        type: "password",
+        helpText:
+          "Salt 1 or Salt 2 from the PayU dashboard (must match the key's salt version). Stored encrypted; never shown again after saving",
+      },
+    ],
+    schema: z.object({
+      merchant_key: nonEmpty("Merchant key"),
+      environment: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .refine((v) => v === "live" || v === "test", {
+          message: 'Environment must be "live" or "test"',
+        }),
+      merchant_salt: nonEmpty("Merchant salt"),
+    }),
+  },
 };
 
 export const SUPPORTED_PGS: PgProvider[] = Object.keys(
