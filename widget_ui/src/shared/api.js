@@ -117,11 +117,18 @@ export const api = {
   offers: (requestId) =>
     call("GET", "/offers", null, { request_id: requestId }),
 
-  payment: (requestId, pg, returnPath) =>
+  // payment: (requestId, pg, returnPath) =>
+  //   call("POST", "/payment", {
+  //     request_id: requestId,
+  //     pg,
+  //     return_path: returnPath,
+  //   }),
+    payment: (requestId, pg, returnPath, method) =>
     call("POST", "/payment", {
       request_id: requestId,
       pg,
       return_path: returnPath,
+      method,
     }),
 
   paymentStatus: (requestId) =>

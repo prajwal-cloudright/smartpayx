@@ -67,6 +67,7 @@ export const PAYU_FORM_FIELDS = [
   "hash",
   "udf1",
   "service_provider",
+  "enforce_paymethod",              
 ] as const;
 
 export function payuPaymentUrl(env: PayuEnvironment): string {
@@ -347,7 +348,8 @@ export const payuAdapter: PgAdapter = {
       { key: creds.merchant_key, txnid, amount, productinfo, firstname, email, udf1 },
       creds.merchant_salt,
     );
-
+    const cleanCallback = new URL(params.callbackUrl);
+    cleanCallback.search = "";
     const fields: Record<string, string> = {
       key: creds.merchant_key,
       txnid,
@@ -356,13 +358,19 @@ export const payuAdapter: PgAdapter = {
       firstname,
       email,
       phone: params.customer.phone.replace(/\D/g, "").slice(-10),
-      surl: params.callbackUrl,
-      furl: params.callbackUrl,
+      // surl: params.callbackUrl,
+      // furl: params.callbackUrl,
+      // surl: cleanCallback.toString(),
+      // furl: cleanCallback.toString(),
+      surl: "https://smartpayx.cloudright.in/callbacks/payu",
+      furl: "https://smartpayx.cloudright.in/callbacks/payu",
       udf1,
       service_provider: "payu_paisa",
       hash,
     };
-
+        if (params.paymentMethod === "NETBANKING") {
+      fields.enforce_paymethod = "netbanking";
+    }
     const origin = new URL(params.callbackUrl).origin;
     const paymentUrl = `${origin}/pay/payu?d=${b64urlEncode({ e: env, f: fields })}`;
 
