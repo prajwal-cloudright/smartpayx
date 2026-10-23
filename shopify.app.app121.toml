@@ -1,0 +1,25 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "ecdce1c2ee7b4bf5b211c928017ffad5"
+name = "app121"
+application_url = "https://example.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2027-01"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_cart_transforms,read_customers,read_discounts,read_inventory,read_orders,read_price_rules,read_products,unauthenticated_read_checkouts,unauthenticated_read_metaobjects,unauthenticated_read_product_listings,unauthenticated_write_checkouts,write_cart_transforms,write_customers,write_discounts,write_orders,write_price_rules,write_products"
+
+[auth]
+redirect_urls = [ "https://example.com/api/auth" ]
+
+[app_proxy]
+url = "https://example.com.com/proxy"
+subpath = "smartpayx"
+prefix = "apps"

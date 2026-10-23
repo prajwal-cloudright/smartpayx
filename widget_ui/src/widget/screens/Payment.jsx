@@ -30,7 +30,7 @@ const PAYMENT_METHODS = [
     description: "Flexible payment plans",
     symbol: "◇",
     color: "cardless",
-    gateway: "RAZORPAY",
+    gateway: "PAYU",
     offer: "Instant Cardless EMI available",
   },
   {

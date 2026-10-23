@@ -67,6 +67,7 @@ enum AttemptStatus {
 enum PgProvider {
   RAZORPAY
   PINELABS
+  PAYU
 
   @@map("pg_provider")
 }
