@@ -49,6 +49,9 @@ import { logger, errorFields } from "../utils/logger.server";
 const BodySchema = z.object({
   request_id: z.uuid(),
   pg: z.enum(PgProvider),
+    method: z                       
+    .enum(["UPI", "BANK_CARD_EMI", "CARDLESS_EMI", "CARDS", "NETBANKING", "WALLETS"])
+    .optional(),
   /**
    * PATH only (never an absolute URL) of the page the widget was opened from,
    * so the buyer returns where they started — PDP buy-now, mini-cart, or /cart.
@@ -239,6 +242,7 @@ export const action = apiAction(
     );
 
     callbackUrl.searchParams.set("attempt", attempt.id);
+       console.log("CALLBACK URL ::", callbackUrl.toString());
     callbackUrl.searchParams.set("request", checkoutRequest.id);
     callbackUrl.searchParams.set("origin", storefrontOrigin(shop));
     if (body.return_path)
@@ -269,6 +273,7 @@ export const action = apiAction(
           imageUrl: l.imageUrl,
         })),
         shippingMinor: BigInt(pricing.shippingMinor),
+        paymentMethod: body.method,
         credentials,
       });
 

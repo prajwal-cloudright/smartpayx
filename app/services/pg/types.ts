@@ -31,6 +31,7 @@ export interface CreateSessionParams {
     imageUrl?: string | null;
   }[];
   shippingMinor: bigint;
+  paymentMethod?: string;
   credentials: Record<string, string>;
 }
 

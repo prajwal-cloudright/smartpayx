@@ -48,7 +48,7 @@ const PAYMENT_METHODS = [
     description: "Pay directly from your bank account",
     symbol: "▦",
     color: "netbanking",
-    gateway: "RAZORPAY",
+    gateway: "PAYU",
     offer: null,
   },
   {
@@ -120,6 +120,7 @@ function PaymentScreen({
         session.request_id,
         availableGateway.pg,
         returnPath,
+        currentMethod.id,
       );
 
       if (res.mode === "REDIRECT" && res.payment_url) {

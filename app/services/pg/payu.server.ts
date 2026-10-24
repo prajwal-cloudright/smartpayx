@@ -66,7 +66,10 @@ export const PAYU_FORM_FIELDS = [
   "furl",
   "hash",
   "udf1",
+  "udf2",         
+  "udf3",      
   "service_provider",
+  "enforce_paymethod",              
 ] as const;
 
 export function payuPaymentUrl(env: PayuEnvironment): string {
@@ -341,10 +344,15 @@ export const payuAdapter: PgAdapter = {
     const productinfo = "SmartPayX Order";
     const firstname = cleanName(params.customer.name);
     const email = params.customer.email;
+   // const udf1 = params.attemptId; // full UUID — too long for txnid
+    const cb = new URL(params.callbackUrl);
     const udf1 = params.attemptId; // full UUID — too long for txnid
+    const udf2 = cb.searchParams.get("origin") ?? ""; // storefront origin
+    const udf3 = cb.searchParams.get("path") ?? ""; // storefront return path
+    const shortCallback = `${cb.origin}${cb.pathname}`;
 
     const hash = computeRequestHash(
-      { key: creds.merchant_key, txnid, amount, productinfo, firstname, email, udf1 },
+      { key: creds.merchant_key, txnid, amount, productinfo, firstname, email, udf1,udf2, udf3 },
       creds.merchant_salt,
     );
 
@@ -356,13 +364,17 @@ export const payuAdapter: PgAdapter = {
       firstname,
       email,
       phone: params.customer.phone.replace(/\D/g, "").slice(-10),
-      surl: params.callbackUrl,
-      furl: params.callbackUrl,
+      surl: shortCallback,
+      furl: shortCallback,
       udf1,
+      udf2, 
+      udf3 ,
       service_provider: "payu_paisa",
       hash,
     };
-
+        if (params.paymentMethod === "NETBANKING") {
+      fields.enforce_paymethod = "netbanking";
+    }
     const origin = new URL(params.callbackUrl).origin;
     const paymentUrl = `${origin}/pay/payu?d=${b64urlEncode({ e: env, f: fields })}`;
 

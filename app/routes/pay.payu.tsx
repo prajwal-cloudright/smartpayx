@@ -26,6 +26,7 @@ const escapeHtml = (v: string) =>
     .replace(/'/g, "&#39;");
 
 export async function loader({ request }: LoaderFunctionArgs) {
+    console.log("PAYU FORM PAGE HIT ::", new Date().toISOString());
   const token = new URL(request.url).searchParams.get("d") ?? "";
   const decoded = decodePayuFormToken(token);
   if (!decoded) return new Response("Invalid payment link.", { status: 400 });
