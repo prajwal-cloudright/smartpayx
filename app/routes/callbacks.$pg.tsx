@@ -121,22 +121,46 @@ async function handleCallback(
   const url = new URL(request.url);
   const pg = parsePg(pgSegment);
 
+  const isPayu = pg === PgProvider.PAYU;
+  console.log("[CB] hit", {
+    pg: pgSegment,
+    method: request.method,
+    url: request.url,
+    contentType: request.headers.get("content-type"),
+  });
+
   // OUR_PARAM_KEYS come from the callback_url we built — read them from the URL
   // directly, before body parsing, so they're always available even on POST.
-  const attemptId = url.searchParams.get("attempt");
-  const originParam = url.searchParams.get("origin");
-  const pathParam = url.searchParams.get("path");
+  let attemptId = url.searchParams.get("attempt");
+  let originParam = url.searchParams.get("origin");
+  let pathParam = url.searchParams.get("path");
 
-  if (!pg || !attemptId) {
+  if (!pg) {
     logger.warn("callback.malformed", { pg: pgSegment, attemptId });
     return redirect(originParam || "/");
   }
 
   // Split: pgParams contains ONLY what the gateway sent (for signature verification).
+  // (Razorpay / Pine Labs: unchanged — they still need ?attempt in the URL.)
   const { pgParams } = await collectParams(request);
+  console.log("[CB] PG params ::", pgParams);
 
-  console.log("PG params :: ", pgParams);
+  // PayU only: its surl/furl are shortened (<=50 chars) so ?attempt/origin/path
+  // are NOT on the URL. They come back in the POST body as udf1/udf2/udf3.
+  // Origin is NOT trusted until the signature is verified (see below).
+  let payuOrigin: string | null = null;
+  if (isPayu) {
+    if (!attemptId) attemptId = pgParams.udf1 || null;
+    if (!pathParam) pathParam = pgParams.udf3 || null;
+    payuOrigin = pgParams.udf2 || null;
+    console.log("[CB][PAYU] recovered from udf", { attemptId, pathParam, payuOrigin });
+  }
 
+  if (!attemptId) {
+    logger.warn("callback.malformed", { pg: pgSegment, attemptId });
+    console.log("[CB] no attemptId -> redirect", originParam || "/");
+    return redirect(originParam || "/");
+  }
 
   const attempt = await prisma.paymentAttempt.findUnique({
     where: { id: attemptId },
@@ -157,7 +181,7 @@ async function handleCallback(
   }
 
   const shop = attempt.request.shop;
-  const returnUrl = buildReturnUrl({
+  let returnUrl = buildReturnUrl({
     origin: originParam,
     path: pathParam,
     requestId: attempt.requestId,
@@ -174,6 +198,19 @@ async function handleCallback(
     const verified = rzpFailureCallback
       ? false
       : getAdapter(pg).verifyCallback(pgParams, credentials);
+
+    console.log("[CB] verified =", verified, { pg, attemptId: attempt.id });
+
+    // PayU only: signature covers udf1-3, so udf2 (origin) is now trustworthy.
+    if (isPayu && verified && payuOrigin) {
+      returnUrl = buildReturnUrl({
+        origin: payuOrigin,
+        path: pathParam,
+        requestId: attempt.requestId,
+        attemptId: attempt.id,
+        fallbackShopDomain: shop.shopDomain,
+      });
+    }
 
     if (verified || (!verified && rzpFailureCallback)) {
       const outcome = await resolveAttempt(attempt.id).catch((error) => {
@@ -199,6 +236,7 @@ async function handleCallback(
     });
   }
 
+  console.log("[CB] redirecting buyer ->", returnUrl);
   return redirect(returnUrl);
 }
 
