@@ -68,7 +68,6 @@ export const PAYU_FORM_FIELDS = [
   "udf1",
   "udf2",         
   "udf3",      
-  "service_provider",
   "enforce_paymethod",              
 ] as const;
 
@@ -369,7 +368,6 @@ export const payuAdapter: PgAdapter = {
       udf1,
       udf2, 
       udf3 ,
-      service_provider: "payu_paisa",
       hash,
     };
         if (params.paymentMethod === "NETBANKING") {
