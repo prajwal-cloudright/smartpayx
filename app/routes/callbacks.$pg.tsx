@@ -118,42 +118,25 @@ async function handleCallback(
   request: Request,
   pgSegment: string | undefined,
 ): Promise<Response> {
-  // const url = new URL(request.url);
-  // const pg = parsePg(pgSegment);
-
-  // // OUR_PARAM_KEYS come from the callback_url we built — read them from the URL
-  // // directly, before body parsing, so they're always available even on POST.
-  // const attemptId = url.searchParams.get("attempt");
-  // const originParam = url.searchParams.get("origin");
-  // const pathParam = url.searchParams.get("path");
-
-  // if (!pg || !attemptId) {
-  //   logger.warn("callback.malformed", { pg: pgSegment, attemptId });
-  //   return redirect(originParam || "/");
-  // }
-
-  // // Split: pgParams contains ONLY what the gateway sent (for signature verification).
-  // const { pgParams } = await collectParams(request);
-
-  // console.log("PG params :: ", pgParams);
-    const url = new URL(request.url);
+  const url = new URL(request.url);
   const pg = parsePg(pgSegment);
 
-  let attemptId = url.searchParams.get("attempt");
+  // OUR_PARAM_KEYS come from the callback_url we built — read them from the URL
+  // directly, before body parsing, so they're always available even on POST.
+  const attemptId = url.searchParams.get("attempt");
   const originParam = url.searchParams.get("origin");
   const pathParam = url.searchParams.get("path");
-
-  const { pgParams } = await collectParams(request);
-
-  const isPayu = pg === PgProvider.PAYU;
-  if (isPayu && !attemptId) attemptId = pgParams.udf1 ?? null;
 
   if (!pg || !attemptId) {
     logger.warn("callback.malformed", { pg: pgSegment, attemptId });
     return redirect(originParam || "/");
   }
 
+  // Split: pgParams contains ONLY what the gateway sent (for signature verification).
+  const { pgParams } = await collectParams(request);
+
   console.log("PG params :: ", pgParams);
+
 
   const attempt = await prisma.paymentAttempt.findUnique({
     where: { id: attemptId },
