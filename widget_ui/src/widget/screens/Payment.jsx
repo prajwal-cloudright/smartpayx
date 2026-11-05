@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
 import { api, ApiError } from "../../shared/api";
-import { Button, Icon, SecureStrip } from "../../shared/ui";
+import { Button, Field, Icon, Input, SecureStrip } from "../../shared/ui";
 import { money } from "../../shared/money";
 import CartSummary from "../components/CartSummary";
 
@@ -81,6 +81,11 @@ function PaymentScreen({
   const [offers, setOffers] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [cart, setCart] = useState(session.cart);
+  const [pricing, setPricing] = useState(session.pricing);
+  const [voucher, setVoucher] = useState("");
+  const [voucherBusy, setVoucherBusy] = useState(false);
+  const [voucherMessage, setVoucherMessage] = useState(null);
 
   const addr = session.selected_address;
 
@@ -108,6 +113,46 @@ function PaymentScreen({
    */
   const availableGateway =
     options.find((opt) => opt.pg === currentMethod.gateway) ?? options[0];
+
+  async function applyVoucher(event) {
+    event.preventDefault();
+    const code = voucher.trim();
+    if (!code || voucherBusy) return;
+
+    await updateVoucher(code, "APPLY");
+  }
+
+  async function removeVoucher(code) {
+    if (voucherBusy) return;
+
+    await updateVoucher(code, "REMOVE");
+  }
+
+  async function updateVoucher(code, action) {
+    setVoucherBusy(true);
+    setVoucherMessage(null);
+
+    try {
+      const result =
+        action === "REMOVE"
+          ? await api.removeDiscountCode(session.request_id, code)
+          : await api.applyDiscountCode(session.request_id, code);
+      setCart(result.cart);
+      setPricing(result.pricing);
+      if (action === "APPLY" && result.applied) setVoucher("");
+      setVoucherMessage({
+        tone: action === "REMOVE" || result.applied ? "info" : "err",
+        text: result.message,
+      });
+    } catch (e) {
+      setVoucherMessage({
+        tone: "err",
+        text: e instanceof ApiError ? e.message : "Couldn't apply this voucher.",
+      });
+    } finally {
+      setVoucherBusy(false);
+    }
+  }
 
   async function pay() {
     if (!availableGateway || busy) return;
@@ -172,8 +217,8 @@ function PaymentScreen({
     <>
       <div className="spx-screen">
         <CartSummary
-          cart={session.cart}
-          pricing={session.pricing}
+          cart={cart}
+          pricing={pricing}
         />
 
         {addr && (
@@ -209,6 +254,69 @@ function PaymentScreen({
             </button>
           </div>
         )}
+
+        <form
+          onSubmit={applyVoucher}
+          className="spx-card spx-card-pad spx-voucher-card"
+        >
+          <div className="spx-voucher-row">
+            <div className="spx-voucher-field">
+              <Field label="Apply Coupon Code">
+                <Input
+                  aria-label="Coupon code"
+                  autoComplete="off"
+                  disabled={voucherBusy}
+                  onChange={(event) => setVoucher(event.target.value)}
+                  placeholder="Enter coupon code"
+                  value={voucher}
+                />
+              </Field>
+            </div>
+            <Button
+              className="spx-voucher-apply"
+              disabled={!voucher.trim()}
+              loading={voucherBusy}
+              type="submit"
+              variant="secondary"
+            >
+              Apply
+            </Button>
+          </div>
+          {cart.discountCodes?.length > 0 && (
+            <div className="spx-voucher-applied" aria-label="Applied vouchers">
+              {cart.discountCodes.map((code) => (
+                <div className="spx-voucher-code" key={code}>
+                  <span>
+                    <Icon.Tag aria-hidden="true" />
+                    {code}
+                  </span>
+                  <button
+                    className="spx-voucher-remove"
+                    disabled={voucherBusy}
+                    onClick={() => void removeVoucher(code)}
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {voucherMessage && (
+            <div
+              aria-live="polite"
+              className={`spx-notice spx-notice-${voucherMessage.tone}`}
+              style={{ marginTop: 12, marginBottom: 0 }}
+            >
+              <Icon.Tag
+                width="15"
+                height="15"
+                style={{ flexShrink: 0, marginTop: 1 }}
+              />
+              <span>{voucherMessage.text}</span>
+            </div>
+          )}
+        </form>
 
         <div className="spx-payment-heading">
           <div className="spx-title" style={{ marginBottom: 4 }}>
@@ -311,7 +419,7 @@ function PaymentScreen({
           <span className="spx-btn-amount">
             <span>Pay</span>
             <b>
-              {money(session.pricing?.totalMinor, session.pricing?.currency)}
+              {money(pricing?.totalMinor, pricing?.currency)}
             </b>
           </span>
         </Button>

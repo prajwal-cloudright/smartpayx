@@ -113,6 +113,20 @@ export const api = {
 
   shippingAddress: (payload) =>
     call("POST", "/shipping-address", payload),
+  
+ applyDiscountCode: (requestId, discountCode) =>
+    call("POST", "/discount-codes", {
+      request_id: requestId,
+      discount_code: discountCode,
+      action: "APPLY",
+    }),
+
+  removeDiscountCode: (requestId, discountCode) =>
+    call("POST", "/discount-codes", {
+      request_id: requestId,
+      discount_code: discountCode,
+      action: "REMOVE",
+    }),
 
   offers: (requestId) =>
     call("GET", "/offers", null, { request_id: requestId }),
