@@ -370,6 +370,90 @@ img {
 
 .spx-field { margin-bottom: 14px; }
 
+theme.css
+
+.spx-voucher-card {
+  margin-bottom: 18px;
+}
+
+.spx-voucher-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.spx-voucher-field {
+  min-width: 0;
+}
+
+.spx-voucher-field .spx-field {
+  margin-bottom: 0;
+}
+
+.spx-voucher-field .spx-input,
+.spx-voucher-apply {
+  min-height: 46px;
+}
+
+.spx-voucher-apply {
+  width: auto;
+  min-width: 88px;
+  padding: 0 16px;
+}
+
+.spx-voucher-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spx-voucher-applied {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.spx-voucher-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  background: var(--spx-surface-2);
+  border-radius: var(--spx-r-sm);
+  font-size: 13px;
+}
+
+.spx-voucher-code > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.spx-voucher-code svg {
+  flex: 0 0 auto;
+  color: var(--spx-success);
+}
+
+.spx-voucher-remove {
+  flex: 0 0 auto;
+  color: var(--spx-danger);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.spx-voucher-remove:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.spx-voucher-remove:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .spx-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

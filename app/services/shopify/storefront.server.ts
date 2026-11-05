@@ -8,6 +8,7 @@
  */
 import type { Shop } from "@prisma/client";
 import CART_QUERY from "../../graphql/queries/cart.details.gql";
+import CART_DISCOUNT_CODES_UPDATE from "../../graphql/mutations/cart.discount-codes-update.gql";
 import prisma from "../../db.server";
 import { unauthenticated, apiVersion } from "../../shopify.server";
 import { createStorefrontAccessToken } from "./admin.server";
@@ -212,6 +213,22 @@ export interface StorefrontCart {
   discountCodes: string[];
 }
 
+export interface StorefrontDiscountCodeResult {
+  code: string;
+  applicable: boolean;
+}
+
+export interface StorefrontDiscountCodesUpdateResult {
+  discountCodes: StorefrontDiscountCodeResult[];
+  userErrors: { field: string[] | null; message: string }[];
+}
+
+function cartIdFromToken(cartToken: string): string {
+  return cartToken.startsWith("gid://")
+    ? cartToken
+    : `gid://shopify/Cart/${cartToken}`;
+}
+
 /**
  * Read a cart by its token. Pass the token VERBATIM including any `?key=`
  * suffix — modern cart tokens carry it and stripping it breaks the lookup.
@@ -222,14 +239,11 @@ export async function fetchCart(
   ctx: StorefrontContext,
   cartToken: string,
 ): Promise<StorefrontCart | null> {
-  const cartId = cartToken.startsWith("gid://")
-    ? cartToken
-    : `gid://shopify/Cart/${cartToken}`;
   const data = await executeStorefront<{ cart: any | null }>(
     ctx,
     "fetchCart",
     CART_QUERY,
-    { cartId },
+    { cartId: cartIdFromToken(cartToken) },
   );
 
   if (!data.cart) return null;
@@ -264,4 +278,35 @@ export async function fetchCart(
       { cause: error },
     );
   }
+}
+
+export async function updateCartDiscountCodes(
+  ctx: StorefrontContext,
+  cartToken: string,
+  discountCodes: string[],
+): Promise<StorefrontDiscountCodesUpdateResult> {
+  const data = await executeStorefront<{
+    cartDiscountCodesUpdate: {
+      cart: { discountCodes: StorefrontDiscountCodeResult[] } | null;
+      userErrors: { field: string[] | null; message: string }[];
+    } | null;
+  }>(
+    ctx,
+    "cartDiscountCodesUpdate",
+    CART_DISCOUNT_CODES_UPDATE,
+    { cartId: cartIdFromToken(cartToken), discountCodes },
+  );
+  const result = data.cartDiscountCodesUpdate;
+
+  if (!result) {
+    throw new ShopifyApiError(
+      "cartDiscountCodesUpdate",
+      "Storefront API returned no discount update result.",
+    );
+  }
+
+  return {
+    discountCodes: result.cart?.discountCodes ?? [],
+    userErrors: result.userErrors ?? [],
+  };
 }
