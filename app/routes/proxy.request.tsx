@@ -38,12 +38,13 @@ import prisma from "../db.server";
 import { parseJsonBody } from "../utils/request.server";
 import { resolveAttempt } from "../services/checkout/resolver.server";
 import { errorFields, logger } from "../utils/logger.server";
+import { authenticateShopifyCustomer } from "../services/auth/shopify-customer.server";
 
 const RequestSchema = z.object({ cart_token: z.string().trim().min(1) });
 
 export const action = apiAction(
   async ({ request: httpRequest }: ActionFunctionArgs) => {
-    const { shop } = await authenticateProxy(httpRequest);
+    const { shop, url, admin } = await authenticateProxy(httpRequest);
     const body = RequestSchema.parse(await parseJsonBody(httpRequest));
 
     // 3. Server-side cart read — what the buyer sees and what we price.
@@ -80,7 +81,24 @@ export const action = apiAction(
       httpRequest,
       checkoutRequest.status,
     );
-    if (authResult.outcome === "FORCE_REVERIFY") {
+    let auth = authResult.outcome === "AUTHORIZED" ? authResult.auth : null;
+    let authToken: string | undefined;
+    const loggedInCustomerId = url.searchParams.get("logged_in_customer_id");
+
+    if (!auth && loggedInCustomerId && admin) {
+      const shopifyAuth = await authenticateShopifyCustomer({
+        admin,
+        shop,
+        loggedInCustomerId,
+        userAgent: httpRequest.headers.get("user-agent") ?? "unknown",
+      });
+      if (shopifyAuth) {
+        auth = shopifyAuth.auth;
+        authToken = shopifyAuth.token;
+      }
+    }
+
+    if (!auth && authResult.outcome === "FORCE_REVERIFY") {
       return apiOk({
         request_id: checkoutRequest.id,
         step: "LOGIN",
@@ -89,8 +107,6 @@ export const action = apiAction(
         pricing: computePricing(shop, snapshot),
       });
     }
-
-    const auth = authResult.auth;
 
     // Bind an unbound request to the authenticated customer (I3).
     if (auth && !checkoutRequest.customerId) {
@@ -185,6 +201,7 @@ export const action = apiAction(
         email_locked:
           auth.customer.emailLocked || Boolean(auth.customer.shopifyCustomerId),
       },
+      ...(authToken ? { auth_token: authToken } : {}),
       addresses: addresses.map((a) => ({
         id: a.id,
         name: a.name,
