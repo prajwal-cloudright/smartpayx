@@ -1,0 +1,19 @@
+query SpxShopifyCustomerContact($id: ID!) {
+  customer(id: $id) {
+    id
+    defaultEmailAddress {
+      emailAddress
+    }
+    defaultPhoneNumber {
+      phoneNumber
+    }
+    defaultAddress {
+      phone
+    }
+    lastOrder {
+      shippingAddress {
+        phone
+      }
+    }
+  }
+}

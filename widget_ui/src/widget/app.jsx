@@ -8,7 +8,7 @@
  */
 import React, { useEffect, useReducer, useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
-import { api, storefrontCart, ApiError } from "../shared/api";
+import { api, auth, storefrontCart, ApiError } from "../shared/api";
 import { createShadowMount } from "../shared/mount";
 import { SpxLogo, PoweredBy, Icon, Skeleton } from "../shared/ui";
 import Login from "./screens/Login";
@@ -89,11 +89,7 @@ function setHostVisible(visible) {
   }
 }
 
-export function open({
-  settings,
-  returnPath = "/",
-  resumeRequestId = null,
-}) {
+export function open({ settings, returnPath = "/", resumeRequestId = null }) {
   const instanceId = ++openInstanceId;
 
   log("open()", { returnPath, resumeRequestId, instanceId });
@@ -176,7 +172,9 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
 
       cartTokenRef.current = cartToken;
 
-      const session = await api.request(cartToken);
+      const response = await api.request(cartToken);
+      const { auth_token: authToken, ...session } = response;
+      if (authToken) auth.set(authToken);
       dispatch({ type: "SESSION", session, notice });
       return session;
     } catch (e) {
@@ -210,8 +208,7 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
   }, [state.exitAsk]);
 
   const requestId = state.session?.request_id ?? state.resumeRequestId;
-  const paying =
-    state.step === "CONFIRMING" || state.phase === "RESUME";
+  const paying = state.step === "CONFIRMING" || state.phase === "RESUME";
 
   function renderScreen() {
     if (state.phase === "FATAL") {
@@ -227,10 +224,7 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
           </div>
 
           <div className="spx-actions">
-            <button
-              className="spx-btn spx-btn-secondary"
-              onClick={onClose}
-            >
+            <button className="spx-btn spx-btn-secondary" onClick={onClose}>
               Close
             </button>
           </div>
@@ -262,20 +256,10 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
 
     switch (state.step) {
       case "LOGIN":
-        return (
-          <Login
-            session={state.session}
-            onAuthed={() => void sync()}
-          />
-        );
+        return <Login session={state.session} onAuthed={() => void sync()} />;
 
       case "ADDRESS":
-        return (
-          <Address
-            session={state.session}
-            onDone={() => void sync()}
-          />
-        );
+        return <Address session={state.session} onDone={() => void sync()} />;
 
       case "PG_SELECTION":
         return (
@@ -289,9 +273,7 @@ function Widget({ returnPath, resumeRequestId, onClose }) {
               })
             }
             onAttemptReleased={() => void sync()}
-            onEditAddress={() =>
-              dispatch({ type: "STEP", step: "ADDRESS" })
-            }
+            onEditAddress={() => dispatch({ type: "STEP", step: "ADDRESS" })}
           />
         );
 

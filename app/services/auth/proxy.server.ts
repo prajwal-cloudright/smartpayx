@@ -8,27 +8,23 @@
 import prisma from "../../db.server";
 import { AppError } from "../errors.server";
 import { authenticate } from "../../shopify.server";
-import { errorFields, logger } from "../../utils/logger.server";
 
 /**
  * Guard for every /proxy/* route: verifies the Shopify signature, resolves the
  * shop row, and enforces the SmartPayX enablement flag. Throws apiError on failure.
  */
 export async function authenticateProxy(request: Request) {
-  let appProxyResponse = {};
-  // try {
-  //   appProxyResponse = await authenticate.public.appProxy(request);
-  //   if (!appProxyResponse.session) {
-  //     throw new AppError("FORBIDDEN", "Shop is not installed.", 403);
-  //   }
-  // } catch (err) {
-  //   logger.error("proxy.validate", errorFields(err));
-  //   throw new AppError("FORBIDDEN", "Shop is not installed.", 403);
-  // }
+  const appProxyResponse = await authenticate.public.appProxy(request);
   const url = new URL(request.url);
   const shopDomain = url.searchParams.get("shop");
   if (!shopDomain) {
     throw new AppError("VALIDATION_ERROR", "Missing shop parameter.", 400);
+  }
+  if (
+    appProxyResponse.session &&
+    appProxyResponse.session.shop.toLowerCase() !== shopDomain.toLowerCase()
+  ) {
+    throw new AppError("FORBIDDEN", "Shopify proxy shop did not match.", 403);
   }
   const shop = await prisma.shop.findUnique({ where: { shopDomain } });
   if (!shop) {
@@ -41,5 +37,10 @@ export async function authenticateProxy(request: Request) {
       403,
     );
   }
-  return { shop, shopDomain, url, ...appProxyResponse };
+  return {
+    shop,
+    shopDomain,
+    url,
+    admin: appProxyResponse.admin,
+  };
 }

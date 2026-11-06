@@ -12,6 +12,7 @@ import VARIANT_INVENTORY from "../../graphql/queries/variants.inventory.gql";
 import ORDER_CREATE from "../../graphql/mutations/order.create.gql";
 import FIND_ORDER from "../../graphql/queries/order.find.request_id.gql";
 import CUSTOMER_QUERY from "../../graphql/queries/customer.find.id.gql";
+import CUSTOMER_CONTACT_QUERY from "../../graphql/queries/customer.contact.gql";
 
 import { fromMinor } from "../../utils/money.server";
 
@@ -642,4 +643,40 @@ export async function validateCustomerLink(
     });
     return { valid: "UNKNOWN" };
   }
+}
+
+export interface ShopifyCustomerContact {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  lastOrderShippingPhone: string | null;
+  defaultAddressPhone: string | null;
+}
+
+export async function fetchShopifyCustomerContact(
+  admin: AdminApiContext,
+  shopifyCustomerId: string,
+): Promise<ShopifyCustomerContact | null> {
+  const data = await executeAdmin<{
+    customer: {
+      id: string;
+      defaultEmailAddress: { emailAddress: string } | null;
+      defaultPhoneNumber: { phoneNumber: string } | null;
+      defaultAddress: { phone: string | null } | null;
+      lastOrder: { shippingAddress: { phone: string | null } | null } | null;
+    } | null;
+  }>(admin, "fetchShopifyCustomerContact", CUSTOMER_CONTACT_QUERY, {
+    id: shopifyCustomerId,
+  });
+
+  if (!data.customer) return null;
+
+  return {
+    id: data.customer.id,
+    email: data.customer.defaultEmailAddress?.emailAddress ?? null,
+    phone: data.customer.defaultPhoneNumber?.phoneNumber ?? null,
+    lastOrderShippingPhone:
+      data.customer.lastOrder?.shippingAddress?.phone ?? null,
+    defaultAddressPhone: data.customer.defaultAddress?.phone ?? null,
+  };
 }
